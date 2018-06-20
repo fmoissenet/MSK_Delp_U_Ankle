@@ -71,7 +71,7 @@
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %__________________________________________________________________________
 
-function Model = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,method)
+function Model = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model)
 
 % Number of frames
 n = size(Model.K,3);
@@ -159,15 +159,33 @@ Model.K2(23,:,:) = Model.K(42,1:48,:);
 % -------------------------------------------------------------------------
 % Weight matrix
 % -------------------------------------------------------------------------
-if strcmp(method,'wsm')
-    W = eye(43+19); % Number of muscles + number of Lagrange multipliers
-    for i = 1:43
-        W(i,i) = (1/43);
-    end
-    for i = 1:19
-        W(43+i,43+i) = weights(i);
-    end
-end
+
+% Initialisation
+W = eye(43 + 19); % Number of muscles + number of Lagrange multipliers
+
+% % Condition 1
+% W(43+1:43+19,43+1:43+19) = zeros(19,19);
+
+% Condition 2
+W(43+1,43+1) = 1e0; % Ankle contact about X axis
+W(43+2,43+2) = 1e0; % Ankle contact about Y axis 
+W(43+3,43+3) = 1e0; % Ankle contact about Z axis
+W(43+4,43+4) = 2e-0; % Knee medial contact 
+W(43+5,43+5) = 4e-0; % Knee lateral contact 
+W(43+6,43+6) = 1e-6; % ACL 
+W(43+7,43+7) = 1e-6; % PCL 
+% MCL
+% Patellar contact about X axis
+% Patellar contact about Y axis
+% Patellar contact about Z axis
+% PT 
+W(43+13,43+13) = 1e-0; % Hip contact about X axis 
+W(43+14,43+14) = 1e-0; % Hip contact about Y axis 
+W(43+15,43+15) = 1e-0; % Hip contact about Z axis 
+% Foot axial 
+W(43+17,43+17) = 1e-6; % Tibia axial 
+% Patella axial 
+W(43+19,43+19) = 1e-6; % Femur axial 
 
 % -------------------------------------------------------------------------
 % RUN OPTIMISATION FOR EACH FRAME
@@ -224,15 +242,12 @@ for i = 1:n
     % ---------------------------------------------------------------------
     options = optimset('Display','off','MaxIter',200,'LargeScale','off','TolFun',0.1,'TolX',1e-10,'TolCon',1e-10,...
         'algorithm','sqp','GradObj','on');
-    if strcmp(method,'wsm')
-        % Weighted sum method
-        C = @(X)Criterion_Lagrange_Multipliers_WeightedSum(X,W,43); % Anonymous function (to pass extra parameters)
-        [X,~,exitflag] = fmincon(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
-    elseif strcmp(method,'mmm')
-        % Min max method
-        C = @(X)Criterion_Lagrange_Multipliers_MinMax(X,43); % Anonymous function (to pass extra parameters)
-        [X,~,~,exitflag] = fminimax(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
-    end
+    % Weighted sum method
+    C = @(X)Criterion_Lagrange_Multipliers_WeightedSum(X,W,m); % Anonymous function (to pass extra parameters)
+    [X,~,exitflag] = fmincon(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
+    % Min max method
+    C = @(X)Criterion_Lagrange_Multipliers_MinMax(X,W,m); % Anonymous function (to pass extra parameters)
+    [X,~,~,exitflag] = fminimax(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
     Model.X(:,1,i) = X;
     flag(i) = exitflag;
     
@@ -243,7 +258,7 @@ figure
 plot(flag);
 
 % -------------------------------------------------------------------------
-% SUBFUNCTIONS
+% SUBFUNCTION
 % -------------------------------------------------------------------------
 function [J,G] = Criterion_Lagrange_Multipliers_WeightedSum(X,W,m)
 
@@ -255,31 +270,13 @@ x = 1:m;
 J1 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
 G1 = W(x,x)*X(x,1); % gradient
 
-x = m+[4;5]; % only tibiofemoral contact forces
+x = m+[6;7]; % only tibiofemoral contact forces
 J2 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
 G2 = W(x,x)*X(x,1); % gradient
 
-x = m+[6;7]; % only cruciate ligaments
+x = m+[8;9]; % only cruciate ligaments
 J3 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
 G3 = W(x,x)*X(x,1); % gradient
 
 J = J1+J2+J3;
 G = G1+G2+G3;
-
-function [J,G] = Criterion_Lagrange_Multipliers_MinMax(X,m)
-
-% J1: musculo-tendon forces
-% J2: contact forces
-% J3: ligament forces
-% J1: musculo-tendon forces
-% J2: contact forces
-% J3: ligament forces
-
-x = 1:m;
-J(1) = (1/length(x))*((X(x,1))'*X(x,1));
-
-x = m+[4;5]; % only tibiofemoral contact forces
-J(2) = (1/length(x))*((X(x,1))'*X(x,1));
-
-x = m+[6;7]; % only cruciate ligaments
-J(3) = (1/length(x))*((X(x,1))'*X(x,1));
