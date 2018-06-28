@@ -223,7 +223,7 @@ for i = 1:n
     % Run optimization (fmincon)
     % ---------------------------------------------------------------------
     options = optimset('Display','off','MaxIter',200,'LargeScale','off','TolFun',0.1,'TolX',1e-10,'TolCon',1e-10,...
-        'algorithm','sqp','GradObj','on');
+        'algorithm','sqp','GradObj','off');
     if strcmp(method,'wsm')
         % Weighted sum method
         C = @(X)Criterion_Lagrange_Multipliers_WeightedSum(X,W,43); % Anonymous function (to pass extra parameters)
@@ -245,7 +245,7 @@ plot(flag);
 % -------------------------------------------------------------------------
 % SUBFUNCTIONS
 % -------------------------------------------------------------------------
-function [J,G] = Criterion_Lagrange_Multipliers_WeightedSum(X,W,m)
+function J = Criterion_Lagrange_Multipliers_WeightedSum(X,W,m)
 
 % J1: musculo-tendon forces
 % J2: contact forces
@@ -253,24 +253,17 @@ function [J,G] = Criterion_Lagrange_Multipliers_WeightedSum(X,W,m)
 
 x = 1:m;
 J1 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
-G1 = W(x,x)*X(x,1); % gradient
 
 x = m+[4;5]; % only tibiofemoral contact forces
 J2 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
-G2 = W(x,x)*X(x,1); % gradient
 
 x = m+[6;7]; % only cruciate ligaments
 J3 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
-G3 = W(x,x)*X(x,1); % gradient
 
 J = J1+J2+J3;
-G = G1+G2+G3;
 
-function [J,G] = Criterion_Lagrange_Multipliers_MinMax(X,m)
+function J = Criterion_Lagrange_Multipliers_MinMax(X,m)
 
-% J1: musculo-tendon forces
-% J2: contact forces
-% J3: ligament forces
 % J1: musculo-tendon forces
 % J2: contact forces
 % J3: ligament forces

@@ -1,4 +1,4 @@
-function [RMSE R2] = goodnessOfFit(y,f,varargin)
+function [RMSE R2] = goodnessFit(y,f,varargin)
 
 % y is the measure
 % f is the fit model

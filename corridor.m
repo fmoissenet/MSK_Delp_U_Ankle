@@ -8,6 +8,6 @@ hold on;
 n=size(MEAN,1);
 x=[1:1:n n:-1:1]';
 y=[MEAN+STD;MEAN(end:-1:1)-STD(end:-1:1)]; % [Aller;Retour]
-A=fill(x,y,color,'LineStyle','none','FaceAlpha',0.8); % Trace le corridor +/- 1 SD
+A=fill(x,y,color,'LineStyle','none','FaceAlpha',0.4); % Trace le corridor +/- 1 SD
 set(get(get(A,'Annotation'),'LegendInformation'),'IconDisplayStyle','off'); % Retire surface de la légende
-plot(MEAN,'Color',color);
+plot(MEAN,'Color','black','Linestyle','-','Linewidth',1);

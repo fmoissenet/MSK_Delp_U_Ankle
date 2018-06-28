@@ -7,137 +7,23 @@ cd('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- 
 
 if grandChallenge == 1
     cd 'grand_challenge_1';
+    footoff = 63;
 elseif grandChallenge == 2
     cd 'grand_challenge_2';
+    footoff = 64;
 elseif grandChallenge == 3
     cd 'grand_challenge_3';
-elseif grandChallenge == 4
-    cd 'grand_challenge_4';
+    footoff = 65;
 elseif grandChallenge == 5
     cd 'grand_challenge_5';
-elseif grandChallenge == 6
-    cd 'grand_challenge_6';
+    footoff = 68;
 end
 
 for i = 1:5
     gc.results(i) = load([filename{i},'_results.mat']);
 end
-cd ..
-
-% -------------------------------------------------------------------------
-% Contact forces
-% -------------------------------------------------------------------------
-% Subject weight (kg)
 gc.weight = gc.results(1).weight;
-
-% Measurements (BW)
-gc.Fmedial_mes = [];
-gc.Flateral_mes = [];
-gc.Ftotal_mes = [];
-for i = 1:5
-    n = length(gc.results(i).Force.KneeMedial);
-    timing = 1:100*n/100;
-    gc.Fmedial_mes = [gc.Fmedial_mes interpft(squeeze(gc.results(i).Force.KneeMedial(:,:,timing)),101)];
-    gc.Flateral_mes = [gc.Flateral_mes interpft(squeeze(gc.results(i).Force.KneeLateral(:,:,timing)),101)];
-    gc.Ftotal_mes = [gc.Ftotal_mes interpft(squeeze(gc.results(i).Force.KneeMedial(:,:,timing)),101)+interpft(squeeze(gc.results(i).Force.KneeLateral(:,:,timing)),101)];
-end
-gc.Fmedial_mes = (gc.Fmedial_mes)./(9.81*gc.weight);
-gc.Flateral_mes = (gc.Flateral_mes)./(9.81*gc.weight);
-gc.Ftotal_mes = (gc.Ftotal_mes)./(9.81*gc.weight);   
-
-% Estimations (BW)
-gc.Fmedial_est0 = [];
-gc.Fmedial_est1 = [];
-gc.Fmedial_est2 = [];
-gc.Flateral_est0 = [];
-gc.Flateral_est1 = [];
-gc.Flateral_est2 = [];
-gc.Ftotal_est0 = [];
-gc.Ftotal_est1 = [];
-gc.Ftotal_est2 = [];
-for i = 1:5
-    n = length(gc.results(i).Model1.Fc(4,:,:));
-    timing = 1:100*n/100;
-    gc.Fmedial_est0 = [gc.Fmedial_est0 interpft(squeeze(gc.results(i).Model0.Fc(4,:,timing)),101)];
-    gc.Fmedial_est1 = [gc.Fmedial_est1 interpft(squeeze(gc.results(i).Model1.Fc(4,:,timing)),101)];
-    gc.Fmedial_est2 = [gc.Fmedial_est2 interpft(squeeze(gc.results(i).Model2.Fc(4,:,timing)),101)];
-    gc.Flateral_est0 = [gc.Flateral_est0 interpft(squeeze(gc.results(i).Model0.Fc(5,:,timing)),101)];
-    gc.Flateral_est1 = [gc.Flateral_est1 interpft(squeeze(gc.results(i).Model1.Fc(5,:,timing)),101)];
-    gc.Flateral_est2 = [gc.Flateral_est2 interpft(squeeze(gc.results(i).Model2.Fc(5,:,timing)),101)];
-    gc.Ftotal_est0 = [gc.Ftotal_est0 interpft(squeeze(gc.results(i).Model0.Fc(4,:,timing)),101)+interpft(squeeze(gc.results(i).Model0.Fc(5,:,timing)),101)];
-    gc.Ftotal_est1 = [gc.Ftotal_est1 interpft(squeeze(gc.results(i).Model1.Fc(4,:,timing)),101)+interpft(squeeze(gc.results(i).Model1.Fc(5,:,timing)),101)];
-    gc.Ftotal_est2 = [gc.Ftotal_est2 interpft(squeeze(gc.results(i).Model2.Fc(4,:,timing)),101)+interpft(squeeze(gc.results(i).Model2.Fc(5,:,timing)),101)];
-end
-gc.Fmedial_est0 = (gc.Fmedial_est0)./(9.81*gc.weight);
-gc.Fmedial_est1 = (gc.Fmedial_est1)./(9.81*gc.weight);
-gc.Fmedial_est2 = (gc.Fmedial_est2)./(9.81*gc.weight);
-gc.Flateral_est0 = (gc.Flateral_est0)./(9.81*gc.weight);
-gc.Flateral_est1 = (gc.Flateral_est1)./(9.81*gc.weight);
-gc.Flateral_est2 = (gc.Flateral_est2)./(9.81*gc.weight);
-gc.Ftotal_est0 = (gc.Ftotal_est0)./(9.81*gc.weight);   
-gc.Ftotal_est1 = (gc.Ftotal_est1)./(9.81*gc.weight);   
-gc.Ftotal_est2 = (gc.Ftotal_est2)./(9.81*gc.weight);   
-
-% Coefficient of concordance (%)
-gc.concordance0 = [];
-gc.concordance1 = [];
-gc.concordance2 = [];
-for i = 1:5
-    gc.concordance0 = [gc.concordance0 gc.results(i).Model0.concordance_EMG];
-    gc.concordance1 = [gc.concordance1 gc.results(i).Model1.concordance_EMG];
-    gc.concordance2 = [gc.concordance2 gc.results(i).Model2.concordance_EMG];
-end
-
-% RMSE (BW) and R2 between estimated and measured tibiofemoral contact forces
-for i = 1:5
-    [gc.RMSE_Fmedial0(i) gc.R2_Fmedial0(i)] = goodnessOfFit(gc.Fmedial_mes(:,i),gc.Fmedial_est0(:,i));
-    [gc.RMSE_Fmedial1(i) gc.R2_Fmedial1(i)] = goodnessOfFit(gc.Fmedial_mes(:,i),gc.Fmedial_est1(:,i));
-    [gc.RMSE_Fmedial2(i) gc.R2_Fmedial2(i)] = goodnessOfFit(gc.Fmedial_mes(:,i),gc.Fmedial_est2(:,i));
-    [gc.RMSE_Flateral0(i) gc.R2_Flateral0(i)] = goodnessOfFit(gc.Flateral_mes(:,i),gc.Flateral_est0(:,i));
-    [gc.RMSE_Flateral1(i) gc.R2_Flateral1(i)] = goodnessOfFit(gc.Flateral_mes(:,i),gc.Flateral_est1(:,i));
-    [gc.RMSE_Flateral2(i) gc.R2_Flateral2(i)] = goodnessOfFit(gc.Flateral_mes(:,i),gc.Flateral_est2(:,i));
-    [gc.RMSE_Ftotal0(i) gc.R2_Ftotal0(i)] = goodnessOfFit(gc.Ftotal_mes(:,i),gc.Ftotal_est0(:,i));
-    [gc.RMSE_Ftotal1(i) gc.R2_Ftotal1(i)] = goodnessOfFit(gc.Ftotal_mes(:,i),gc.Ftotal_est1(:,i));
-    [gc.RMSE_Ftotal2(i) gc.R2_Ftotal2(i)] = goodnessOfFit(gc.Ftotal_mes(:,i),gc.Ftotal_est2(:,i));
-end    
-
-% -------------------------------------------------------------------------
-% Figures contact forces
-% -------------------------------------------------------------------------
-figure;
-subplot(3,1,1);
-xlim([0 100]);
-ylim([0 4.5]);
-box on;
-grid on;
-hold on;
-% title('Medial force');
-corridor(mean(gc.Fmedial_mes,2),std(gc.Fmedial_mes,1,2),'black');
-corridor(mean(gc.Fmedial_est0,2),std(gc.Fmedial_est0,1,2),'red');
-corridor(mean(gc.Fmedial_est1,2),std(gc.Fmedial_est1,1,2),'green');
-corridor(mean(gc.Fmedial_est2,2),std(gc.Fmedial_est2,1,2),'blue');
-subplot(3,1,2);
-xlim([0 100]);
-ylim([0 4.5]);
-box on;
-grid on;
-hold on;
-% title('Lateral force');
-corridor(mean(gc.Flateral_mes,2),std(gc.Flateral_mes,1,2),'black');
-corridor(mean(gc.Flateral_est0,2),std(gc.Flateral_est0,1,2),'red');
-corridor(mean(gc.Flateral_est1,2),std(gc.Flateral_est1,1,2),'green');
-corridor(mean(gc.Flateral_est2,2),std(gc.Flateral_est2,1,2),'blue');
-subplot(3,1,3);
-xlim([0 100]);
-ylim([0 4.5]);
-box on;
-grid on;
-hold on;
-% title('Total force');
-corridor(mean(gc.Ftotal_mes,2),std(gc.Ftotal_mes,1,2),'black');
-corridor(mean(gc.Ftotal_est0,2),std(gc.Ftotal_est0,1,2),'red');
-corridor(mean(gc.Ftotal_est1,2),std(gc.Ftotal_est1,1,2),'green');
-corridor(mean(gc.Ftotal_est2,2),std(gc.Ftotal_est2,1,2),'blue');
+cd ..
 
 % -------------------------------------------------------------------------
 % Musculo-tendon forces
@@ -146,11 +32,11 @@ corridor(mean(gc.Ftotal_est2,2),std(gc.Ftotal_est2,1,2),'blue');
 Phase1 = 1:10;      % loading responce
 Phase2 = 11:30;     % midstance
 Phase3 = 31:50;     % terminal stance
-Phase4 = 51:60;     % pre-swing
-Phase5 = 61:73;     % initial swing
+Phase4 = 51:footoff;     % pre-swing
+Phase5 = footoff+1:73;     % initial swing
 Phase6 = 74:87;     % midswing
 Phase7 = 88:100;	% terminal Swing
-phases = [0 10 30 50 60 73 87 100];
+phases = [0 10 30 50 footoff 73 87 100];
 
 % Measurements
 Emg = gc.results.Emg;
@@ -250,61 +136,61 @@ for i = 1:14
         n = size(gc.results(j).Model0.Fm,3);
         timing = 1:100*n/100;
         if i == 1
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(38:49,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(38:49,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(38:49,:,timing))),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(1:3,:,timing))),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(1:3,:,timing))),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(1:3,:,timing))),101)/(9.81*gc.weight)];
         elseif i == 2
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(50:61,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(50:61,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(50:61,:,timing))),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(4:6,:,timing))),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(4:6,:,timing))),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(4:6,:,timing))),101)/(9.81*gc.weight)];
         elseif i == 3
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(13:25,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(13:25,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(13:25,:,timing))),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(12:14,:,timing))),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(12:14,:,timing))),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(12:14,:,timing))),101)/(9.81*gc.weight)];
         elseif i == 4
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(102:103,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(102:103,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(102:103,:,timing))),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(21,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(21,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(21,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 5
-            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(94,:,timing)),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(94,:,timing)),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(94,:,timing)),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(24,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(24,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(24,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 6
             F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(26,:,timing)),101)/(9.81*gc.weight)];
             F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(26,:,timing)),101)/(9.81*gc.weight)];
             F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(26,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 7
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(90:91,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(90:91,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(90:91,:,timing))),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(28,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(28,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(28,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 8
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(120:129,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(120:129,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(120:129,:,timing))),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(29,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(29,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(29,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 9
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(112:119,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(112:119,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(112:119,:,timing))),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(31,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(31,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(31,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 10
-            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(35,:,timing)),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(35,:,timing)),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(35,:,timing)),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(32,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(32,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(32,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 11
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(33,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(33,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(33,:,timing)),101)/(9.81*gc.weight)];
+        elseif i == 12
             F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(34,:,timing)),101)/(9.81*gc.weight)];
             F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(34,:,timing)),101)/(9.81*gc.weight)];
             F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(34,:,timing)),101)/(9.81*gc.weight)];
-        elseif i == 12
-            F_est0 = [F_est0 interpft(squeeze(sum(gc.results(j).Model0.Fm(96:101,:,timing))),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(sum(gc.results(j).Model1.Fm(96:101,:,timing))),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(sum(gc.results(j).Model2.Fm(96:101,:,timing))),101)/(9.81*gc.weight)];
         elseif i == 13
-            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(104,:,timing)),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(104,:,timing)),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(104,:,timing)),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(36,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(36,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(36,:,timing)),101)/(9.81*gc.weight)];
         elseif i == 14
-            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(79,:,timing)),101)/(9.81*gc.weight)];
-            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(79,:,timing)),101)/(9.81*gc.weight)];
-            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(79,:,timing)),101)/(9.81*gc.weight)];
+            F_est0 = [F_est0 interpft(squeeze(gc.results(j).Model0.Fm(39,:,timing)),101)/(9.81*gc.weight)];
+            F_est1 = [F_est1 interpft(squeeze(gc.results(j).Model1.Fm(39,:,timing)),101)/(9.81*gc.weight)];
+            F_est2 = [F_est2 interpft(squeeze(gc.results(j).Model2.Fm(39,:,timing)),101)/(9.81*gc.weight)];
         end
     end
     gc.m(i).F_est0(:,:) = F_est0;
@@ -315,59 +201,176 @@ end
 % -------------------------------------------------------------------------
 % Figures musculo-tendon forces
 % -------------------------------------------------------------------------
-% for i = 1:14
-%     figure('units','normalized','position',[0.3 0.3 .30 .25]);
-%     sub1 = subplot(2,1,1);
-%     hold on; box on;
-%     xlim([0,100]);
-%     if i == 1
-%        ylim([0,1]);
-%     elseif i == 2
-%        ylim([0,3]);
-%     elseif i == 3
-%        ylim([0,1]);
-%     elseif i == 4
-%        ylim([0,1]);
-%     elseif i == 5
-%        ylim([0,1]);
-%     elseif i == 6
-%        ylim([0,1]);
-%     elseif i == 7
-%        ylim([0,1]);
-%     elseif i == 8
-%        ylim([0,1]);
-%     elseif i == 9
-%        ylim([0,1]);
-%     elseif i == 10
-%        ylim([0,2]);
-%     elseif i == 11
-%        ylim([0,1]);
-%     elseif i == 12
-%        ylim([0,7]);
-%     elseif i == 13
-%        ylim([0,1]);
-%     elseif i == 14
-%        ylim([0,3]);
-%     end
-%     set(gca,'XTick',[]);
-%     line([phases(5) phases(5)],[0 10],'Color',[0 0 0],'LineWidth',1,'LineStyle','--');
-%     corridor(mean(gc.m(i).F_est0(:,:),2),std(gc.m(i).F_est0(:,:),1,2),'red');
-%     corridor(mean(gc.m(i).F_est1(:,:),2),std(gc.m(i).F_est1(:,:),1,2),'green');
-%     corridor(mean(gc.m(i).F_est2(:,:),2),std(gc.m(i).F_est2(:,:),1,2),'blue');
-%     set(gca,'LineWidth',1.5,'FontName','Times','FontSize',18);
-%     sub2 = subplot(2,1,2);
-%     hold on; box on;
-%     xlim([0,100]);
-%     set(gca,'XTick',[0 20 40 60 80 100]);
-%     set(gca,'YTick',[]);
-%     for j = 1:7
-%         if onoff_EMG(i,j) == 1
-%             rectangle('Position',[phases(j),0.1,phases(j+1)-phases(j),0.01],'LineStyle','-','FaceColor',[0.7,0.7,0.7]);
-%         else
-%             rectangle('Position',[phases(j),0.1,phases(j+1)-phases(j),0.01],'LineStyle','-','FaceColor',[1,1,1]);
-%         end
-%     end
-%     set(gca,'LineWidth',1.5,'FontName','Times','FontSize',18);
-%     set(sub1,'position',[0.19 0.20 0.8 0.7]);
-%     set(sub2,'position',[0.19 0.15 0.8 0.05]);
-% end
+for i = 4:11%1:14 only muscles crossing the knee
+    figure('units','normalized','position',[0.3 0.3 .19 .25]);
+    sub1 = subplot(2,1,1);
+    hold on; box on; grid on;
+    xlim([0,100]);
+    if i == 1
+       ylim([0,1]);
+    elseif i == 2
+       ylim([0,3]);
+    elseif i == 3
+       ylim([0,1]);
+    elseif i == 4
+       ylim([0,1.5]);
+    elseif i == 5
+       ylim([0,1.5]);
+    elseif i == 6
+       ylim([0,1.5]);
+    elseif i == 7
+       ylim([0,1.5]);
+    elseif i == 8
+       ylim([0,1.5]);
+    elseif i == 9
+       ylim([0,1.5]);
+    elseif i == 10
+       ylim([0,1.5]);
+    elseif i == 11
+       ylim([0,1.5]);
+    elseif i == 12
+       ylim([0,7]);
+    elseif i == 13
+       ylim([0,1]);
+    elseif i == 14
+       ylim([0,3]);
+    end
+    set(gca,'XTick',[0 20 40 60 80 100]);
+    set(gca,'XTickLabel',{'' '' '' '' '' ''});
+    set(gca,'YTick',[0 0.5 1 1.5]);
+    line([footoff footoff],[0 10],'Color','black','Linestyle','--')
+    corridor(mean(gc.m(i).F_est0(:,:),2),std(gc.m(i).F_est0(:,:),1,2),'red');
+    corridor(mean(gc.m(i).F_est1(:,:),2),std(gc.m(i).F_est1(:,:),1,2),'green');
+    corridor(mean(gc.m(i).F_est2(:,:),2),std(gc.m(i).F_est2(:,:),1,2),'blue');
+    set(gca,'FontName','Times','FontSize',14);
+    sub2 = subplot(2,1,2);
+    hold on;
+    xlim([0,100]);
+    set(gca,'XTick',[0 20 40 60 80 100]);
+    set(gca,'YTick',[]);
+    for j = 1:7
+        if onoff_EMG(i,j) == 1
+            rectangle('Position',[phases(j),0.1,phases(j+1)-phases(j),0.01],'LineStyle','-','FaceColor',[0.7,0.7,0.7]);
+        else
+            rectangle('Position',[phases(j),0.1,phases(j+1)-phases(j),0.01],'LineStyle','-','FaceColor',[1,1,1]);
+        end
+    end
+    set(gca,'FontName','Times','FontSize',14);
+    set(sub1,'position',[0.19 0.20 0.8 0.7]);
+    set(sub2,'position',[0.19 0.15 0.8 0.05]);
+    saveas(gca, ['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\results\grand_challenge_',num2str(grandChallenge),'_plot_',num2str(i)], 'fig');
+    saveas(gca, ['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\results\grand_challenge_',num2str(grandChallenge),'_plot_',num2str(i)], 'pdf');
+end
+
+
+% -------------------------------------------------------------------------
+% Contact forces
+% -------------------------------------------------------------------------
+% Measurements (BW)
+gc.Fmedial_mes = [];
+gc.Flateral_mes = [];
+gc.Ftotal_mes = [];
+for i = 1:5
+    n = length(gc.results(i).Force.KneeMedial);
+    timing = 1:100*n/100;
+    gc.Fmedial_mes = [gc.Fmedial_mes interpft(squeeze(gc.results(i).Force.KneeMedial(:,:,timing)),101)];
+    gc.Flateral_mes = [gc.Flateral_mes interpft(squeeze(gc.results(i).Force.KneeLateral(:,:,timing)),101)];
+    gc.Ftotal_mes = [gc.Ftotal_mes interpft(squeeze(gc.results(i).Force.KneeMedial(:,:,timing)),101)+interpft(squeeze(gc.results(i).Force.KneeLateral(:,:,timing)),101)];
+end
+gc.Fmedial_mes = (gc.Fmedial_mes)./(9.81*gc.weight);
+gc.Flateral_mes = (gc.Flateral_mes)./(9.81*gc.weight);
+gc.Ftotal_mes = (gc.Ftotal_mes)./(9.81*gc.weight);   
+
+% Estimations (BW)
+gc.Fmedial_est0 = [];
+gc.Fmedial_est1 = [];
+gc.Fmedial_est2 = [];
+gc.Flateral_est0 = [];
+gc.Flateral_est1 = [];
+gc.Flateral_est2 = [];
+gc.Ftotal_est0 = [];
+gc.Ftotal_est1 = [];
+gc.Ftotal_est2 = [];
+for i = 1:5
+    n = length(gc.results(i).Model1.Fc(4,:,:));
+    timing = 1:100*n/100;
+    gc.Fmedial_est0 = [gc.Fmedial_est0 interpft(squeeze(gc.results(i).Model0.Fc(4,:,timing)),101)];
+    gc.Fmedial_est1 = [gc.Fmedial_est1 interpft(squeeze(gc.results(i).Model1.Fc(4,:,timing)),101)];
+    gc.Fmedial_est2 = [gc.Fmedial_est2 interpft(squeeze(gc.results(i).Model2.Fc(4,:,timing)),101)];
+    gc.Flateral_est0 = [gc.Flateral_est0 interpft(squeeze(gc.results(i).Model0.Fc(5,:,timing)),101)];
+    gc.Flateral_est1 = [gc.Flateral_est1 interpft(squeeze(gc.results(i).Model1.Fc(5,:,timing)),101)];
+    gc.Flateral_est2 = [gc.Flateral_est2 interpft(squeeze(gc.results(i).Model2.Fc(5,:,timing)),101)];
+    gc.Ftotal_est0 = [gc.Ftotal_est0 interpft(squeeze(gc.results(i).Model0.Fc(4,:,timing)),101)+interpft(squeeze(gc.results(i).Model0.Fc(5,:,timing)),101)];
+    gc.Ftotal_est1 = [gc.Ftotal_est1 interpft(squeeze(gc.results(i).Model1.Fc(4,:,timing)),101)+interpft(squeeze(gc.results(i).Model1.Fc(5,:,timing)),101)];
+    gc.Ftotal_est2 = [gc.Ftotal_est2 interpft(squeeze(gc.results(i).Model2.Fc(4,:,timing)),101)+interpft(squeeze(gc.results(i).Model2.Fc(5,:,timing)),101)];
+end
+gc.Fmedial_est0 = (gc.Fmedial_est0)./(9.81*gc.weight);
+gc.Fmedial_est1 = (gc.Fmedial_est1)./(9.81*gc.weight);
+gc.Fmedial_est2 = (gc.Fmedial_est2)./(9.81*gc.weight);
+gc.Flateral_est0 = (gc.Flateral_est0)./(9.81*gc.weight);
+gc.Flateral_est1 = (gc.Flateral_est1)./(9.81*gc.weight);
+gc.Flateral_est2 = (gc.Flateral_est2)./(9.81*gc.weight);
+gc.Ftotal_est0 = (gc.Ftotal_est0)./(9.81*gc.weight);   
+gc.Ftotal_est1 = (gc.Ftotal_est1)./(9.81*gc.weight);   
+gc.Ftotal_est2 = (gc.Ftotal_est2)./(9.81*gc.weight);   
+
+% Coefficient of concordance (%)
+gc.concordance0 = [];
+gc.concordance1 = [];
+gc.concordance2 = [];
+for i = 1:5
+    gc.concordance0 = [gc.concordance0 gc.results(i).Model0.concordance_EMG];
+    gc.concordance1 = [gc.concordance1 gc.results(i).Model1.concordance_EMG];
+    gc.concordance2 = [gc.concordance2 gc.results(i).Model2.concordance_EMG];
+end
+
+% RMSE (BW) and R2 between estimated and measured tibiofemoral contact forces
+for i = 1:5
+    [gc.RMSE_Fmedial0(i) gc.R2_Fmedial0(i)] = goodnessFit(gc.Fmedial_mes(:,i),gc.Fmedial_est0(:,i));
+    [gc.RMSE_Fmedial1(i) gc.R2_Fmedial1(i)] = goodnessFit(gc.Fmedial_mes(:,i),gc.Fmedial_est1(:,i));
+    [gc.RMSE_Fmedial2(i) gc.R2_Fmedial2(i)] = goodnessFit(gc.Fmedial_mes(:,i),gc.Fmedial_est2(:,i));
+    [gc.RMSE_Flateral0(i) gc.R2_Flateral0(i)] = goodnessFit(gc.Flateral_mes(:,i),gc.Flateral_est0(:,i));
+    [gc.RMSE_Flateral1(i) gc.R2_Flateral1(i)] = goodnessFit(gc.Flateral_mes(:,i),gc.Flateral_est1(:,i));
+    [gc.RMSE_Flateral2(i) gc.R2_Flateral2(i)] = goodnessFit(gc.Flateral_mes(:,i),gc.Flateral_est2(:,i));
+    [gc.RMSE_Ftotal0(i) gc.R2_Ftotal0(i)] = goodnessFit(gc.Ftotal_mes(:,i),gc.Ftotal_est0(:,i));
+    [gc.RMSE_Ftotal1(i) gc.R2_Ftotal1(i)] = goodnessFit(gc.Ftotal_mes(:,i),gc.Ftotal_est1(:,i));
+    [gc.RMSE_Ftotal2(i) gc.R2_Ftotal2(i)] = goodnessFit(gc.Ftotal_mes(:,i),gc.Ftotal_est2(:,i));
+end    
+
+% -------------------------------------------------------------------------
+% Figures contact forces
+% -------------------------------------------------------------------------
+figure;
+subplot(3,1,1);
+xlim([0 100]);
+ylim([0 4.5]);
+box on;
+grid on;
+hold on;
+% title('Medial force');
+corridor(mean(gc.Fmedial_mes,2),std(gc.Fmedial_mes,1,2),'black');
+corridor(mean(gc.Fmedial_est0,2),std(gc.Fmedial_est0,1,2),'red');
+corridor(mean(gc.Fmedial_est1,2),std(gc.Fmedial_est1,1,2),'green');
+corridor(mean(gc.Fmedial_est2,2),std(gc.Fmedial_est2,1,2),'blue');
+subplot(3,1,2);
+xlim([0 100]);
+ylim([0 4.5]);
+box on;
+grid on;
+hold on;
+% title('Lateral force');
+corridor(mean(gc.Flateral_mes,2),std(gc.Flateral_mes,1,2),'black');
+corridor(mean(gc.Flateral_est0,2),std(gc.Flateral_est0,1,2),'red');
+corridor(mean(gc.Flateral_est1,2),std(gc.Flateral_est1,1,2),'green');
+corridor(mean(gc.Flateral_est2,2),std(gc.Flateral_est2,1,2),'blue');
+subplot(3,1,3);
+xlim([0 100]);
+ylim([0 7.5]);
+box on;
+grid on;
+hold on;
+% title('Total force');
+corridor(mean(gc.Ftotal_mes,2),std(gc.Ftotal_mes,1,2),'black');
+corridor(mean(gc.Ftotal_est0,2),std(gc.Ftotal_est0,1,2),'red');
+corridor(mean(gc.Ftotal_est1,2),std(gc.Ftotal_est1,1,2),'green');
+corridor(mean(gc.Ftotal_est2,2),std(gc.Ftotal_est2,1,2),'blue');

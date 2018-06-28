@@ -79,119 +79,118 @@
 clc;
 close all;
 clearvars;
+cd('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\MSK_Delp_U_Ankle');
+addpath('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\MSK_Delp_U_Ankle');
+addpath('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\data\');
 
-grandChallenge = 1;
-filename = {'jw_ngait_2' 'jw_ngait_3' 'jw_ngait_4' 'jw_ngait_5' 'jw_ngait_6'};
-weights = [1e0;1e0;1e0;1;5;1e-6;1e-6;1e-6;1e0;1e0;1e0;1e-6;1e0;1e0;1e0;1e-6;1e-6;1e-6;1e-6];
+% grandChallenge = 1;
+% filename = {'jw_ngait_2' 'jw_ngait_3' 'jw_ngait_4' 'jw_ngait_5' 'jw_ngait_6'};
 % grandChallenge = 2;
 % filename = {'dm_ngait4' 'dm_ngait10' 'dm_ngait11' 'dm_ngait12' 'dm_ngait13'};
-% weights = [1e0;1e0;1e0;2;1;1e-6;1e-6;1e-6;1e0;1e0;1e0;1e-6;1e0;1e0;1e0;1e-6;1e-6;1e-6;1e-6];
 % grandChallenge = 3;
 % filename = {'SC_ngait_og5' 'SC_ngait_og6' 'SC_ngait_og7' 'SC_ngait_og8' 'SC_ngait_og9'};
-% weights = [1e0;1e0;1e0;10;30;1e-6;1e-6;1e-6;1e0;1e0;1e0;1e-6;1e0;1e0;1e0;1e-6;1e-6;1e-6;1e-6];
-% grandChallenge = 5;
-% filename = {'PS_ngait_og_ss1' 'PS_ngait_og_ss7' 'PS_ngait_og_ss8' 'PS_ngait_og_ss9' 'PS_ngait_og_ss11'};
-% weights = [1e0;1e0;1e0;4;4;1e-6;1e-6;1e-6;1e0;1e0;1e0;1e-6;1e0;1e0;1e0;1e-6;1e-6;1e-6;1e-6];
+grandChallenge = 5;
+filename = {'PS_ngait_og_ss1' 'PS_ngait_og_ss7' 'PS_ngait_og_ss8' 'PS_ngait_og_ss9' 'PS_ngait_og_ss11'};
 
-for i = 1:length(filename)
-clearvars -except grandChallenge filename i weights;
-cd('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\MSK_Delp_U_Ankle');
-addpath('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\data\');
-load(['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\data\grand_challenge_',num2str(grandChallenge),'\',filename{i},'_pPS.mat']);
-
-% -------------------------------------------------------------------------
-% COMPUTE POSITIONS, ACCELERATIONS AND JACOBIAN MATRIX
-% -------------------------------------------------------------------------
-
-% Insert patella as segment 4
-Segment = Modify_Segment(Segment);
-% Optimisation
-[Segment,Joint] = Multibody_Kinematics_Optimisation(Segment,Joint,f);
-
-% Model velocities
-Model.dQdt = [Segment(2).dQdt; ... % Foot (12*1*n)
-    Segment(3).dQdt; ... % Shank (12*1*n)
-    Segment(4).dQdt; ... % Patella (12*1*n)
-    Segment(5).dQdt]; % Thigh (12*1*n)
-
-% Model accelerations
-Model.d2Qdt2 = [Segment(2).d2Qdt2; ... % Foot (12*1*n)
-    Segment(3).d2Qdt2; ... % Shank (12*1*n)
-    Segment(4).d2Qdt2; ... % Patella (12*1*n)
-    Segment(5).d2Qdt2]; % Thigh (12*1*n)
-
-% Model Jacobian
-Model.K = [Joint(2).Kk(:,1:48,:); ... % Ankle (4*48*n)
-    Joint(3).Kk(:,1:48,:); ... % Tibio-femoral (5*48*n)
-    Joint(4).Kk(:,1:48,:); ... % Patello-femoral (6*48*n)
-    Joint(5).Kk(:,1:48,:); ... % Hip (3*48*n)
-    Segment(2).Kr(:,1:48,:); ... % Foot (6*48*n)
-    Segment(3).Kr(:,1:48,:); ... % Shank (6*48*n)
-    Segment(4).Kr(:,1:48,:); ... % Patella (6*48*n)
-    Segment(5).Kr(:,1:48,:)]; % Thigh (6*48*n)
-
-% -------------------------------------------------------------------------
-% PREPARE SEGMENT KINETICS
-% -------------------------------------------------------------------------
-Segment = Compute_J(Segment); % Pseudo inertia matrix
-[Segment,Model] = Compute_G(Segment,Model); % Mass matrix
-
-% -------------------------------------------------------------------------
-% COMPUTE EXTERNAL FORCES
-% -------------------------------------------------------------------------
-Model = Compute_P(Segment,Model); % Weight
-Model = Compute_R(Segment,Joint,Model); % Ground reaction forces
-
-% -------------------------------------------------------------------------
-% COMPUTE MUSCULAR LEVER ARMS
-% -------------------------------------------------------------------------
-[Segment,Model] = Compute_L(Segment,Model);
-
-% -------------------------------------------------------------------------
-% ESTIMATE MUSCULO-TENDON, CONTACT, LIGAMENT AND BONE FORCES USING A 
-% CONSTRAINED STATIC OPTIMISATION METHOD
-% -------------------------------------------------------------------------
-
-% Optimisation - Weight sum method 1
-weights = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
-Model0 = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,'wsm');
-Model0.Fm = Model0.X(1:43,1,1:n); % About lines of action
-Model0.Fc = [Model0.X(43+1:43+3,1,1:n); ... % 3D ankle contact in foot SCS
-    Model0.X(43+4,1,1:n);Model0.X(43+5,1,1:n); ... % Tibio-femoral medial and lateral contact in shank SCS
-    Model0.X(43+9:43+11,1,1:n); ... % 3D patello-femoral contact in patella SCS
-    Model0.X(43+13:43+15,1,1:n)]; % 3D hip contact in thigh SCS
-Model0.Fl = [Model0.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
-    Model0.X(43+12,1,1:n)]; % PT
-Model0.Fb = Model0.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
-
-% Optimisation - Weight sum method 2
-% use weights defined for each Grand Challenge dataset
-Model1 = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,'wsm');
-Model1.Fm = Model1.X(1:43,1,1:n); % About lines of action
-Model1.Fc = [Model1.X(43+1:43+3,1,1:n); ... % 3D ankle contact in foot SCS
-    Model1.X(43+4,1,1:n);Model1.X(43+5,1,1:n); ... % Tibio-femoral medial and lateral contact in shank SCS
-    Model1.X(43+9:43+11,1,1:n); ... % 3D patello-femoral contact in patella SCS
-    Model1.X(43+13:43+15,1,1:n)]; % 3D hip contact in thigh SCS
-Model1.Fl = [Model1.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
-    Model1.X(43+12,1,1:n)]; % PT
-Model1.Fb = Model1.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
-
-% Optimisation - Min max method
-% no weight
-Model2 = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,'mmm');
-Model2.Fm = Model2.X(1:43,1,1:n); % About lines of action
-Model2.Fc = [Model2.X(43+1:43+3,1,1:n); ... % 3D ankle contact in foot SCS
-    Model2.X(43+4,1,1:n);Model2.X(43+5,1,1:n); ... % Tibio-femoral medial and lateral contact in shank SCS
-    Model2.X(43+9:43+11,1,1:n); ... % 3D patello-femoral contact in patella SCS
-    Model2.X(43+13:43+15,1,1:n)]; % 3D hip contact in thigh SCS
-Model2.Fl = [Model2.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
-    Model2.X(43+12,1,1:n)]; % PT
-Model2.Fb = Model2.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
-
-save(['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\data\grand_challenge_',num2str(grandChallenge),'\',filename{i},'_results.mat']);
-
-end
+% for i = 1:length(filename)
+% clearvars -except grandChallenge filename i weights;
+% load(['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\data\grand_challenge_',num2str(grandChallenge),'\',filename{i},'_pPS.mat']);
+% 
+% % -------------------------------------------------------------------------
+% % COMPUTE POSITIONS, ACCELERATIONS AND JACOBIAN MATRIX
+% % -------------------------------------------------------------------------
+% 
+% % Insert patella as segment 4
+% Segment = Modify_Segment(Segment);
+% % Optimisation
+% [Segment,Joint] = Multibody_Kinematics_Optimisation(Segment,Joint,f);
+% 
+% % Model velocities
+% Model.dQdt = [Segment(2).dQdt; ... % Foot (12*1*n)
+%     Segment(3).dQdt; ... % Shank (12*1*n)
+%     Segment(4).dQdt; ... % Patella (12*1*n)
+%     Segment(5).dQdt]; % Thigh (12*1*n)
+% 
+% % Model accelerations
+% Model.d2Qdt2 = [Segment(2).d2Qdt2; ... % Foot (12*1*n)
+%     Segment(3).d2Qdt2; ... % Shank (12*1*n)
+%     Segment(4).d2Qdt2; ... % Patella (12*1*n)
+%     Segment(5).d2Qdt2]; % Thigh (12*1*n)
+% 
+% % Model Jacobian
+% Model.K = [Joint(2).Kk(:,1:48,:); ... % Ankle (4*48*n)
+%     Joint(3).Kk(:,1:48,:); ... % Tibio-femoral (5*48*n)
+%     Joint(4).Kk(:,1:48,:); ... % Patello-femoral (6*48*n)
+%     Joint(5).Kk(:,1:48,:); ... % Hip (3*48*n)
+%     Segment(2).Kr(:,1:48,:); ... % Foot (6*48*n)
+%     Segment(3).Kr(:,1:48,:); ... % Shank (6*48*n)
+%     Segment(4).Kr(:,1:48,:); ... % Patella (6*48*n)
+%     Segment(5).Kr(:,1:48,:)]; % Thigh (6*48*n)
+% 
+% % -------------------------------------------------------------------------
+% % PREPARE SEGMENT KINETICS
+% % -------------------------------------------------------------------------
+% Segment = Compute_J(Segment); % Pseudo inertia matrix
+% [Segment,Model] = Compute_G(Segment,Model); % Mass matrix
+% 
+% % -------------------------------------------------------------------------
+% % COMPUTE EXTERNAL FORCES
+% % -------------------------------------------------------------------------
+% Model = Compute_P(Segment,Model); % Weight
+% Model = Compute_R(Segment,Joint,Model); % Ground reaction forces
+% 
+% % -------------------------------------------------------------------------
+% % COMPUTE MUSCULAR LEVER ARMS
+% % -------------------------------------------------------------------------
+% [Segment,Model] = Compute_L(Segment,Model);
+% 
+% % -------------------------------------------------------------------------
+% % ESTIMATE MUSCULO-TENDON, CONTACT, LIGAMENT AND BONE FORCES USING A 
+% % CONSTRAINED STATIC OPTIMISATION METHOD
+% % -------------------------------------------------------------------------
+% 
+% % Optimisation - Weight sum method 1
+% weights = zeros(19,1);
+% Model0 = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,'wsm');
+% Model0.Fm = Model0.X(1:43,1,1:n); % About lines of action
+% Model0.Fc = [Model0.X(43+1:43+3,1,1:n); ... % 3D ankle contact in foot SCS
+%     Model0.X(43+4,1,1:n);Model0.X(43+5,1,1:n); ... % Tibio-femoral medial and lateral contact in shank SCS
+%     Model0.X(43+9:43+11,1,1:n); ... % 3D patello-femoral contact in patella SCS
+%     Model0.X(43+13:43+15,1,1:n)]; % 3D hip contact in thigh SCS
+% Model0.Fl = [Model0.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
+%     Model0.X(43+12,1,1:n)]; % PT
+% Model0.Fb = Model0.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
+% Model0 = Dickerson_new(Model0,Emg,'Delp',n);
+% 
+% % Optimisation - Weight sum method 2
+% weights = [1e0;1e0;1e0;2e0;4e0;1e-6;1e-6;1e-6;1e0;1e0;1e0;1e-6;1e-6;1e-6;1e-6;1e-6;1e-6;1e-6;1e-6];
+% Model1 = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,'wsm');
+% Model1.Fm = Model1.X(1:43,1,1:n); % About lines of action
+% Model1.Fc = [Model1.X(43+1:43+3,1,1:n); ... % 3D ankle contact in foot SCS
+%     Model1.X(43+4,1,1:n);Model1.X(43+5,1,1:n); ... % Tibio-femoral medial and lateral contact in shank SCS
+%     Model1.X(43+9:43+11,1,1:n); ... % 3D patello-femoral contact in patella SCS
+%     Model1.X(43+13:43+15,1,1:n)]; % 3D hip contact in thigh SCS
+% Model1.Fl = [Model1.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
+%     Model1.X(43+12,1,1:n)]; % PT
+% Model1.Fb = Model1.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
+% Model1 = Dickerson_new(Model1,Emg,'Delp',n);
+% 
+% % Optimisation - Min max method
+% % no weight
+% Model2 = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,'mmm');
+% Model2.Fm = Model2.X(1:43,1,1:n); % About lines of action
+% Model2.Fc = [Model2.X(43+1:43+3,1,1:n); ... % 3D ankle contact in foot SCS
+%     Model2.X(43+4,1,1:n);Model2.X(43+5,1,1:n); ... % Tibio-femoral medial and lateral contact in shank SCS
+%     Model2.X(43+9:43+11,1,1:n); ... % 3D patello-femoral contact in patella SCS
+%     Model2.X(43+13:43+15,1,1:n)]; % 3D hip contact in thigh SCS
+% Model2.Fl = [Model2.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
+%     Model2.X(43+12,1,1:n)]; % PT
+% Model2.Fb = Model2.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
+% Model2 = Dickerson_new(Model2,Emg,'Delp',n);
+% 
+% save(['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\data\grand_challenge_',num2str(grandChallenge),'\',filename{i},'_results.mat']);
+% 
+% end
 
 outcomes = processing(grandChallenge,filename);
 save(['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\data\grand_challenge_',num2str(grandChallenge),'\goodnessOfFit_results.mat']);
-saveas(gca, ['C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Multi-objective optimisation\results\grand_challenge_',num2str(grandChallenge),'_plot'], 'png');
