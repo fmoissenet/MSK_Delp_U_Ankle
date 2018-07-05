@@ -374,3 +374,56 @@ corridor(mean(gc.Ftotal_mes,2),std(gc.Ftotal_mes,1,2),'black');
 corridor(mean(gc.Ftotal_est0,2),std(gc.Ftotal_est0,1,2),'red');
 corridor(mean(gc.Ftotal_est1,2),std(gc.Ftotal_est1,1,2),'green');
 corridor(mean(gc.Ftotal_est2,2),std(gc.Ftotal_est2,1,2),'blue');
+
+
+% -------------------------------------------------------------------------
+% Ligament forces
+% -------------------------------------------------------------------------
+% Estimations (BW)
+gc.Facl_est0 = [];
+gc.Facl_est1 = [];
+gc.Facl_est2 = [];
+gc.Fpcl_est0 = [];
+gc.Fpcl_est1 = [];
+gc.Fpcl_est2 = [];
+for i = 1:5
+    n = length(gc.results(i).Model1.Fl(3,:,:));
+    timing = 1:100*n/100;
+    gc.Facl_est0 = [gc.Facl_est0 interpft(squeeze(gc.results(i).Model0.Fl(1,:,timing)),101)];
+    gc.Facl_est1 = [gc.Facl_est1 interpft(squeeze(gc.results(i).Model1.Fl(1,:,timing)),101)];
+    gc.Facl_est2 = [gc.Facl_est2 interpft(squeeze(gc.results(i).Model2.Fl(1,:,timing)),101)];
+    gc.Fpcl_est0 = [gc.Fpcl_est0 interpft(squeeze(gc.results(i).Model0.Fl(2,:,timing)),101)];
+    gc.Fpcl_est1 = [gc.Fpcl_est1 interpft(squeeze(gc.results(i).Model1.Fl(2,:,timing)),101)];
+    gc.Fpcl_est2 = [gc.Fpcl_est2 interpft(squeeze(gc.results(i).Model2.Fl(2,:,timing)),101)];
+end
+gc.Facl_est0 = (gc.Facl_est0)./(9.81*gc.weight);
+gc.Facl_est1 = (gc.Facl_est1)./(9.81*gc.weight);
+gc.Facl_est2 = (gc.Facl_est2)./(9.81*gc.weight);
+gc.Fpcl_est0 = (gc.Fpcl_est0)./(9.81*gc.weight);
+gc.Fpcl_est1 = (gc.Fpcl_est1)./(9.81*gc.weight);
+gc.Fpcl_est2 = (gc.Fpcl_est2)./(9.81*gc.weight);  
+
+% -------------------------------------------------------------------------
+% Figures ligament forces
+% -------------------------------------------------------------------------
+figure;
+subplot(2,1,1);
+xlim([0 100]);
+% ylim([0 4.5]);
+box on;
+grid on;
+hold on;
+% title('ACL force');
+corridor(mean(gc.Facl_est0,2),std(gc.Facl_est0,1,2),'red');
+corridor(mean(gc.Facl_est1,2),std(gc.Facl_est1,1,2),'green');
+corridor(mean(gc.Facl_est2,2),std(gc.Facl_est2,1,2),'blue');
+subplot(2,1,2);
+xlim([0 100]);
+% ylim([0 4.5]);
+box on;
+grid on;
+hold on;
+% title('PCL force');
+corridor(mean(gc.Fpcl_est0,2),std(gc.Fpcl_est0,1,2),'red');
+corridor(mean(gc.Fpcl_est1,2),std(gc.Fpcl_est1,1,2),'green');
+corridor(mean(gc.Fpcl_est2,2),std(gc.Fpcl_est2,1,2),'blue');

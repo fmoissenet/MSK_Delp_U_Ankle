@@ -71,7 +71,7 @@
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %__________________________________________________________________________
 
-function Model = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,weights,method)
+function Model = Static_Optimisation_Lagrange_Multipliers(Segment,Joint,Model,Force,weights,method)
 
 % Number of frames
 n = size(Model.K,3);
@@ -159,19 +159,103 @@ Model.K2(23,:,:) = Model.K(42,1:48,:);
 % -------------------------------------------------------------------------
 % Weight matrix
 % -------------------------------------------------------------------------
-if strcmp(method,'wsm')
-    W = eye(43+19); % Number of muscles + number of Lagrange multipliers
-    for i = 1:43
-        W(i,i) = (1/43);
-    end
-    for i = 1:19
-        W(43+i,43+i) = weights(i);
-    end
+W = eye(43+19); % Number of muscles + number of Lagrange multipliers
+for i = 1:43
+    W(i,i) = 1;%(1/43);
+end
+for i = 1:19
+    W(43+i,43+i) = weights(i);
 end
 
 % -------------------------------------------------------------------------
 % RUN OPTIMISATION FOR EACH FRAME
 % -------------------------------------------------------------------------
+if strcmp(method,'mmm')
+    for i = 1:n
+
+%         waitbar(i/n,h);
+
+        % ---------------------------------------------------------------------
+        % Partial parameter reduction and constraint equations
+        % ---------------------------------------------------------------------
+        [eigvector,~] = eig(Model.K2(:,:,i)'*Model.K2(:,:,i));
+        Model.ZK2(:,:,i) = eigvector(:,1:25); % 25 first eigenvalues are 0
+        Aeq = Model.ZK2(:,:,i)'*[Model.Lever(:,:,i), - Model.K1(:,:,i)'];
+        Beq = Model.ZK2(:,:,i)'*...
+            (Model.G(:,:,i)*Model.d2Qdt2(:,:,i) - Model.P(:,:,i) - Model.R(:,:,i));
+
+        % Initial guess
+        if i == 1
+            Xini = zeros(43 + 19,1);
+        else
+            Xini = Model.X(:,1,i-1);
+        end
+
+        % Lower abounds
+        Xmin = zeros(43 + 19,1);
+        Xmin(43+1,1) = -Inf; % Ankle contact about X axis
+        % Ankle contact about Y axis
+        Xmin(43+3,1) = -Inf; % Ankle contact about Z axis
+        % Knee medial contact
+        % Knee lateral contact
+        % ACL
+        % PCL
+        Xmin(43+8,1) = -Inf; % MCL
+        Xmin(43+9,1) = -Inf; % Patellar contact about X axis
+        Xmin(43+10,1) = -Inf; % Patellar contact about Y axis
+        Xmin(43+11,1) = -Inf; % Patellar contact about Z axis
+        % PT
+        Xmin(43+13,1) = -Inf; % Hip contact about X axis
+        % Hip contact about Y axis
+        Xmin(43+15,1) = -Inf; % Hip contact about Z axis
+        Xmin(43+16,1) = -Inf; % Foot axial
+        % Tibia axial
+        Xmin(43+18,1) = -Inf; % Patella axial
+        % Femur axial
+
+        % Upper bounds
+        Xmax = Inf(43 + 19,1);
+    %     Xmax = [Model.Fmax(1:43,1);Inf(19,1)];
+%         acoeff = 1.3;
+%         Xmax = [Model.PCSA(1:43,1)*61;Inf(19,1)]*acoeff; % Muscle stress of 61 N/cm^2
+%         Xmax(43+[4;5]) = [max(Force.KneeMedial);max(Force.KneeLateral)]*acoeff;
+%         Xmax(43+[6;7]) = [3000;2000]*acoeff; % Cleather and Bull, 2011
+
+        % ---------------------------------------------------------------------
+        % Run optimization (fmincon)
+        % ---------------------------------------------------------------------
+        options = optimset('Display','off','MaxIter',500,'LargeScale','off','TolFun',0.1,'TolX',1e-10,'TolCon',1e-10,...
+            'algorithm','sqp','GradObj','off');
+        % Weighted sum method
+        C = @(X)Criterion_Lagrange_Multipliers_WeightedSum(X,W,43); % Anonymous function (to pass extra parameters)
+        [X,~,exitflag] = fmincon(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
+        Model.X(:,1,i) = X;
+        flag(i) = exitflag;
+            
+        m = 43;
+        clear x;
+        x = 1:m;
+        Jtest(1,:,i) = ((X(x,1))'*(X(x,1)));
+        x = m+[4;5]; % only tibiofemoral contact forces
+        Jtest(2,:,i) = ((X(x,1))'*(X(x,1)));
+        x = m+[6;7]; % only cruciate ligaments
+        Jtest(3,:,i) = ((X(x,1))'*(X(x,1)));
+
+    end
+%     figure
+% plot(flag);
+%     
+    Jmax(1) = max(Jtest(1,:,:)); 
+    Jmax(2) = max(Jtest(2,:,:)); 
+    Jmax(3) = max(Jtest(3,:,:)); 
+%     
+    figure;
+hold on;
+plot(squeeze(Jtest(1,:,:))','red');
+plot(squeeze(Jtest(2,:,:))','green');
+plot(squeeze(Jtest(3,:,:))','blue');    
+end
+
 for i = 1:n
     
     waitbar(i/n,h);
@@ -217,23 +301,28 @@ for i = 1:n
     % Upper bounds
     Xmax = Inf(43 + 19,1);
 %     Xmax = [Model.Fmax(1:43,1);Inf(19,1)];
-%     Xmax = [Model.PCSA(1:43,1)*61;Inf(19,1)]; % Muscle stress of 61 N/cm^2
+%     acoeff = 1.3;
+%     Xmax = [Model.PCSA(1:43,1)*61;Inf(19,1)]*acoeff; % Muscle stress of 61 N/cm^2
+%     Xmax(43+[4;5]) = [max(Force.KneeMedial);max(Force.KneeLateral)]*acoeff;
+%     Xmax(43+[6;7]) = [3000;2000]*acoeff; % Cleather and Bull, 2011
     
     % ---------------------------------------------------------------------
     % Run optimization (fmincon)
     % ---------------------------------------------------------------------
-    options = optimset('Display','off','MaxIter',200,'LargeScale','off','TolFun',0.1,'TolX',1e-10,'TolCon',1e-10,...
+    options = optimset('Display','off','MaxIter',500,'LargeScale','off','TolFun',0.1,'TolX',1e-10,'TolCon',1e-10,...
         'algorithm','sqp','GradObj','off');
     if strcmp(method,'wsm')
         % Weighted sum method
         C = @(X)Criterion_Lagrange_Multipliers_WeightedSum(X,W,43); % Anonymous function (to pass extra parameters)
-        [X,~,exitflag] = fmincon(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
+        [X,J,exitflag] = fmincon(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
     elseif strcmp(method,'mmm')
         % Min max method
-        C = @(X)Criterion_Lagrange_Multipliers_MinMax(X,43); % Anonymous function (to pass extra parameters)
-        [X,~,~,exitflag] = fminimax(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
+        C = @(X)Criterion_Lagrange_Multipliers_MinMax(X,Jmax,43); % Anonymous function (to pass extra parameters)
+        [X,J,~,exitflag] = fminimax(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);
     end
+
     Model.X(:,1,i) = X;
+    Model.J(:,1,i) = J;
     flag(i) = exitflag;
     
 end
@@ -241,6 +330,21 @@ end
 close(h);
 figure
 plot(flag);
+
+figure;
+hold on;
+plot(squeeze(Model.J(1,:,:))','red');
+plot(squeeze(Model.J(2,:,:))','green');
+plot(squeeze(Model.J(3,:,:))','blue');
+
+% GC1, cycle 1 : max J2 at 34 and 97
+% = Bosser en particulier sur ces deux points
+% = produire le front de pareto avec  gamultiobj
+% = tracer qqch de similaire que http://www.ozeninc.com/wp-content/uploads/2015/07/methods3.gif
+% = tracer le plan (?) correspondant aux mesures (sur J2 a priori seulement)
+% = positionner WSM1, WSM2 et MMM sur ce front de Pareto
+% = est-ce que ces solutions sont bien sur le front?
+% = est-ce qu'il y en a une qui se rapproche du plan de mesure?
 
 % -------------------------------------------------------------------------
 % SUBFUNCTIONS
@@ -252,27 +356,27 @@ function J = Criterion_Lagrange_Multipliers_WeightedSum(X,W,m)
 % J3: ligament forces
 
 x = 1:m;
-J1 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
+J1 = ((X(x,1))'*W(x,x)*(X(x,1)));
 
 x = m+[4;5]; % only tibiofemoral contact forces
-J2 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
+J2 = ((X(x,1))'*W(x,x)*(X(x,1)));
 
 x = m+[6;7]; % only cruciate ligaments
-J3 = (1/length(x))*((X(x,1))'*W(x,x)*X(x,1)); % objective function
+J3 = ((X(x,1))'*W(x,x)*(X(x,1)));
 
 J = J1+J2+J3;
 
-function J = Criterion_Lagrange_Multipliers_MinMax(X,m)
+function J = Criterion_Lagrange_Multipliers_MinMax(X,Jmax,m)
 
 % J1: musculo-tendon forces
 % J2: contact forces
 % J3: ligament forces
 
 x = 1:m;
-J(1) = (1/length(x))*((X(x,1))'*X(x,1));
+J(1) = (1/Jmax(1))*((X(x,1))'*(X(x,1)));
 
 x = m+[4;5]; % only tibiofemoral contact forces
-J(2) = (1/length(x))*((X(x,1))'*X(x,1));
+J(2) = (1/Jmax(2))*((X(x,1))'*(X(x,1)));
 
 x = m+[6;7]; % only cruciate ligaments
-J(3) = (1/length(x))*((X(x,1))'*X(x,1));
+J(3) = (1/Jmax(3))*((X(x,1))'*(X(x,1)));
