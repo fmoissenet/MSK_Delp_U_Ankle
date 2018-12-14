@@ -70,6 +70,8 @@
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %__________________________________________________________________________
 
+addpath('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\MSK_Delp_U_Ankle');
+cd('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\MSK_Delp_U_Ankle');
 
 % -------------------------------------------------------------------------
 % LOAD RECORDED DATA
@@ -81,8 +83,9 @@ close all
 clear all
 
 % Select data file
-[a,b] = uigetfile('*.mat','Selet data file');
-load([b,a]);
+addpath('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Contribution to CoP');
+load('C:\Users\florent.moissenet\Documents\Professionnel\data\grand_challenge_verified\GC1\Matlab Data\ngait2_pPS.mat');
+mass = weight;
 
 % Number of frames
 n = size(Segment(2).rM,3);
@@ -160,6 +163,9 @@ Model.Fl = [Model.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
 % Bone forces (compression forces > 0)
 % About segment Y axis
 Model.Fb = Model.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
+
+% Contributions
+Contribution = computeContributions(Segment,Joint,Model,weight);
 
 % -------------------------------------------------------------------------
 % FIGURES
