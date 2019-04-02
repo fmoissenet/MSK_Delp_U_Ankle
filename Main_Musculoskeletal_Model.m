@@ -83,8 +83,7 @@ close all
 clear all
 
 % Select data file
-addpath('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Contribution to CoP');
-load('C:\Users\florent.moissenet\Documents\Professionnel\data\grand_challenge_verified\GC1\Matlab Data\ngait2_pPS.mat');
+load('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Contribution to CoP\Data\gait2_pPS.mat');
 mass = weight;
 
 % Number of frames
