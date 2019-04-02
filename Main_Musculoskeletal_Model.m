@@ -83,11 +83,15 @@ close all
 clear all
 
 % Select data file
-load('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Contribution to CoP\Data\gait2_pPS.mat');
+load('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Contribution to CoP\Data\gait2.mat');
 mass = weight;
+Segment = Multibody_Optimisation_Lower_Limb(Segment,'SSS');
+Segment = Multibody_Optimisation_Lower_Limb(Segment,'UnSS');
+Segment = Multibody_Optimisation_Lower_Limb(Segment,'UnPS');
 
-% Number of frames
+% Number of frames and frequency
 n = size(Segment(2).rM,3);
+f = freq;
 
 % -------------------------------------------------------------------------
 % COMPUTE POSITIONS, ACCELERATIONS AND JACOBIAN MATRIX
@@ -164,7 +168,7 @@ Model.Fl = [Model.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
 Model.Fb = Model.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
 
 % Contributions
-Contribution = computeContributions(Segment,Joint,Model,weight);
+Contribution = computeContributions_Delp_U_Ankle(Segment,Joint,Model,weight);
 
 % -------------------------------------------------------------------------
 % FIGURES
@@ -205,4 +209,3 @@ legend({'Ankle contact (about X axis of Foot)', 'Ankle contact (about Y axis of 
     'Hip contact (about X axis of Thigh)', 'Hip contact (about Y axis of Thigh)', 'Hip contact (about Z axis of Thigh)', ...
     'ACL', 'PCL', 'MCL', 'PT', ...
     'Foot axial', 'Tibia axial', 'Patella axial', 'Femur axial'})
-

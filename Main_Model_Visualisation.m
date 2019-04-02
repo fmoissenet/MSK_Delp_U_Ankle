@@ -62,7 +62,7 @@ quiver3(0,0,0,0,0,1,0.5,'k');
 n = size(Segment(2).Q,3); % At least Q parameter for foot (or hand) segment
 
 % Frames of interest
-ni = [1,round(n*60/100),n]; 
+ni = [1:n];%[1,round(n*60/100),n]; 
 
 %% Segments
 
