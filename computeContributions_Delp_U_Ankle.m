@@ -252,17 +252,17 @@ for i = 1:length(list)
         F(find(abs(F)<1)) = 0;
         M(find(abs(M)<0.1)) = 0;
     end
-    % Avec seulement les deux premiers termes, on exprime ce qu'un muscle
-    % pourrait induire comme modification de la trajectoire du CoP actuelle
+    % Equations of the non-central axis (Sardain and Bessonnet, 2004)
     temp   = Mprod_array3(1/dot(F,F),cross(F,M)) - ...
              Mprod_array3(1/(dot(F,Y).*dot(F,F)), ...
-                        Mprod_array3(dot(F,M),cross(F,Y))) + ...
-                        + Segment(1).Q(4:6,:,1:sw);
+                          Mprod_array3(dot(F,M),cross(F,Y))) + ...
+                          Segment(1).Q(4:6,:,1:sw);
     lambda = Mprod_array3(-temp(2,:,:),Mpinv_array3(F(2,:,:)));
     CoP    = Mprod_array3(1/dot(F,F),cross(F,M)) - ...
              Mprod_array3(1/(dot(F,Y).*dot(F,F)), ...
                           Mprod_array3(dot(F,M),cross(F,Y))) + ...
-             Segment(1).Q(4:6,:,1:sw) + Mprod_array3(lambda,F);
+                          Segment(1).Q(4:6,:,1:sw) + ...                          
+                          Mprod_array3(lambda,F);
     CoPx(:,i) = permute(CoP(1,:,:),[3,2,1]);
     CoPz(:,i) = permute(CoP(3,:,:),[3,2,1]);
 end
@@ -282,15 +282,14 @@ for i = 1:11
         title('CoP');
     else
         title(strrep(list{i},'O_',''));
-    end
-    
-    % Compute the rotation matrix to realign the foot longitudinal axis
-    vec = [(mean(Segment(2).rM(3,3,1:sw),3)+mean(Segment(2).rM(3,2,1:sw),3))/2-mean(Segment(2).rM(3,1,1:sw),3); ...
-        (mean(Segment(2).rM(1,2,1:sw),3)+mean(Segment(2).rM(1,3,1:sw),3))/2-mean(Segment(2).rM(1,1,1:sw),3); ...
-        0]/norm([(mean(Segment(2).rM(3,3,1:sw),3)+mean(Segment(2).rM(3,2,1:sw),3))/2-mean(Segment(2).rM(3,1,1:sw),3); ...
-        (mean(Segment(2).rM(1,2,1:sw),3)+mean(Segment(2).rM(1,3,1:sw),3))/2-mean(Segment(2).rM(1,1,1:sw),3); ...
-        0]);
-    vec0 = [0;1;0];
+    end    
+%     % Compute the rotation matrix to realign the foot longitudinal axis
+%     vec = [(mean(Segment(2).rM(3,3,1:sw),3)+mean(Segment(2).rM(3,2,1:sw),3))/2-mean(Segment(2).rM(3,1,1:sw),3); ...
+%         (mean(Segment(2).rM(1,2,1:sw),3)+mean(Segment(2).rM(1,3,1:sw),3))/2-mean(Segment(2).rM(1,1,1:sw),3); ...
+%         0]/norm([(mean(Segment(2).rM(3,3,1:sw),3)+mean(Segment(2).rM(3,2,1:sw),3))/2-mean(Segment(2).rM(3,1,1:sw),3); ...
+%         (mean(Segment(2).rM(1,2,1:sw),3)+mean(Segment(2).rM(1,3,1:sw),3))/2-mean(Segment(2).rM(1,1,1:sw),3); ...
+%         0]);
+%     vec0 = [0;1;0];
 %     R = [dot(vec,vec0) -norm(cross(vec,vec0)) 0;...
 %         norm(cross(vec,vec0)) dot(vec,vec0) 0;...
 %         0 0 1];
@@ -316,47 +315,49 @@ for i = 1:11
         end
     end
     plot(squeeze(Contribution.CoP(1,12,2:sw-3))',squeeze(Contribution.CoP(2,12,2:sw-3))','Linestyle','-','Color','black','Linewidth',2);
-%     cd('C:\Users\florent.moissenet\Documents\Professionnel\publications\communications\2017\SB\Plots');
+figure
+plot(squeeze(CoPz(:,i)-CoPz(:,12))')
+    %     cd('C:\Users\florent.moissenet\Documents\Professionnel\publications\communications\2017\SB\Plots');
 %     saveas(gcf,[strrep(list{i},'O_',''),'.png']);   
 end
 
-figure; hold on;
-for m = 1:11
-    start = 2; stop = round(10*n/100);
-    diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_Z(isnan(diff_Z)) = 0;
-    line([0 -diff_Z],[m*5-5 m*5-5]+1,'Color','red');
-    start = round(11*n/100); stop = round(30*n/100);
-    diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_Z(isnan(diff_Z)) = 0;
-    line([0 -diff_Z],[m*5-5 m*5-5]+2,'Color','green');
-    start = round(31*n/100); stop = round(50*n/100);
-    diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_Z(isnan(diff_Z)) = 0;
-    line([0 -diff_Z],[m*5-5 m*5-5]+3,'Color','blue');
-    start = round(51*n/100); stop = sw-4;
-    diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_Z(isnan(diff_Z)) = 0;
-    line([0 -diff_Z],[m*5-5 m*5-5]+4,'Color','black');
-    line([-0.055 0.055],[m*5-5 m*5-5]+5,'Color','black','Linestyle','--');
-end
-figure; hold on;
-for m = 1:11
-    start = 1; stop = 8;%round(10*n/100);
-    diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_X(isnan(diff_X)) = 0;
-    line([m*5-5 m*5-5]+1,[0 -diff_X],'Color','red');
-    start = round(11*n/100); stop = round(30*n/100);
-    diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_X(isnan(diff_X)) = 0;
-    line([m*5-5 m*5-5]+2,[0 -diff_X],'Color','green');
-    start = round(31*n/100); stop = round(50*n/100);
-    diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_X(isnan(diff_X)) = 0;
-    line([m*5-5 m*5-5]+3,[0 -diff_X],'Color','blue');
-    start = round(51*n/100); stop = sw-4;
-    diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
-    diff_X(isnan(diff_X)) = 0;
-    line([m*5-5 m*5-5]+4,[0 -diff_X],'Color','black');
-    line([m*5-5 m*5-5]+5,[-0.25 0.25],'Color','black','Linestyle','--');
-end
+% figure; hold on;
+% for m = 1:11
+%     start = 2; stop = round(10*n/100);
+%     diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_Z(isnan(diff_Z)) = 0;
+%     line([0 -diff_Z],[m*5-5 m*5-5]+1,'Color','red');
+%     start = round(11*n/100); stop = round(30*n/100);
+%     diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_Z(isnan(diff_Z)) = 0;
+%     line([0 -diff_Z],[m*5-5 m*5-5]+2,'Color','green');
+%     start = round(31*n/100); stop = round(50*n/100);
+%     diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_Z(isnan(diff_Z)) = 0;
+%     line([0 -diff_Z],[m*5-5 m*5-5]+3,'Color','blue');
+%     start = round(51*n/100); stop = sw-4;
+%     diff_Z = nanmean(Contribution.CoP(1,12,start:stop)-Contribution.CoP(1,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_Z(isnan(diff_Z)) = 0;
+%     line([0 -diff_Z],[m*5-5 m*5-5]+4,'Color','black');
+%     line([-0.055 0.055],[m*5-5 m*5-5]+5,'Color','black','Linestyle','--');
+% end
+% figure; hold on;
+% for m = 1:11
+%     start = 1; stop = 8;%round(10*n/100);
+%     diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_X(isnan(diff_X)) = 0;
+%     line([m*5-5 m*5-5]+1,[0 -diff_X],'Color','red');
+%     start = round(11*n/100); stop = round(30*n/100);
+%     diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_X(isnan(diff_X)) = 0;
+%     line([m*5-5 m*5-5]+2,[0 -diff_X],'Color','green');
+%     start = round(31*n/100); stop = round(50*n/100);
+%     diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_X(isnan(diff_X)) = 0;
+%     line([m*5-5 m*5-5]+3,[0 -diff_X],'Color','blue');
+%     start = round(51*n/100); stop = sw-4;
+%     diff_X = nanmean(Contribution.CoP(2,12,start:stop)-Contribution.CoP(2,m,start:stop),3); % -: lateralise,  +: medialise
+%     diff_X(isnan(diff_X)) = 0;
+%     line([m*5-5 m*5-5]+4,[0 -diff_X],'Color','black');
+%     line([m*5-5 m*5-5]+5,[-0.25 0.25],'Color','black','Linestyle','--');
+% end
