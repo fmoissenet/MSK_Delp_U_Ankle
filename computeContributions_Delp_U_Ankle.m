@@ -255,16 +255,15 @@ for i = 1:length(list)
     % Equations of the non-central axis (Sardain and Bessonnet, 2004)
     temp   = Mprod_array3(1/dot(F,F),cross(F,M)) - ...
              Mprod_array3(1/(dot(F,Y).*dot(F,F)), ...
-                          Mprod_array3(dot(F,M),cross(F,Y))) + ...
-                          Segment(1).Q(4:6,:,1:sw);
+                          Mprod_array3(dot(F,M),cross(F,Y)));
     lambda = Mprod_array3(-temp(2,:,:),Mpinv_array3(F(2,:,:)));
     CoP    = Mprod_array3(1/dot(F,F),cross(F,M)) - ...
              Mprod_array3(1/(dot(F,Y).*dot(F,F)), ...
-                          Mprod_array3(dot(F,M),cross(F,Y))) + ...
-                          Segment(1).Q(4:6,:,1:sw) + ...                          
+                          Mprod_array3(dot(F,M),cross(F,Y))) + ...                        
                           Mprod_array3(lambda,F);
-    CoPx(:,i) = permute(CoP(1,:,:),[3,2,1]);
-    CoPz(:,i) = permute(CoP(3,:,:),[3,2,1]);
+    CoPx(:,i) = permute(CoP(1,:,:) + Segment(1).Q(4,:,1:sw),[3,2,1]);
+    CoPy(:,i) = permute(CoP(2,:,:) + Segment(1).Q(5,:,1:sw),[3,2,1]);
+    CoPz(:,i) = permute(CoP(3,:,:) + Segment(1).Q(6,:,1:sw),[3,2,1]);
 end
 
 % Measured CoP
@@ -315,10 +314,8 @@ for i = 1:11
         end
     end
     plot(squeeze(Contribution.CoP(1,12,2:sw-3))',squeeze(Contribution.CoP(2,12,2:sw-3))','Linestyle','-','Color','black','Linewidth',2);
-figure
-plot(squeeze(CoPz(:,i)-CoPz(:,12))')
-    %     cd('C:\Users\florent.moissenet\Documents\Professionnel\publications\communications\2017\SB\Plots');
-%     saveas(gcf,[strrep(list{i},'O_',''),'.png']);   
+%     cd('C:\Users\florent.moissenet\Documents\Professionnel\publications\communications\2017\SB\Plots');
+%     saveas(gcf,[strrep(list{i},'O_',''),'.png']);
 end
 
 % figure; hold on;

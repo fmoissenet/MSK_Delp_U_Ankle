@@ -84,6 +84,7 @@ clear all
 
 % Select data file
 load('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Contribution to CoP\Data\gait2.mat');
+% load('C:\Users\florent.moissenet\Documents\Professionnel\data\grand_challenge_5\Matlab Data\PS_ngait_og_ss7.mat');
 mass = weight;
 % Segment = Multibody_Optimisation_Lower_Limb(Segment,'SSS');
 % Segment = Multibody_Optimisation_Lower_Limb(Segment,'UnSS');
