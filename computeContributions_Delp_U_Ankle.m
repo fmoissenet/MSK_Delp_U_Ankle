@@ -158,9 +158,9 @@ list ={'weight', ...
                        
 % Compute contribution of weight to ground reaction and accelerations
 % -------------------------------------------------------------------------
-A             = zeros(5,30,n);
-b             = zeros(5,1,n);
-Astar         = zeros(5,30,n);
+A             = zeros(6,30,n);
+b             = zeros(6,1,n);
+Astar         = zeros(6,30,n);
 A(:,:,1:sw-1) = [-Mprod_array3(Mtran_array3(Model.ZK(:,:,1:sw-1)),Model.LR(:,:,1:sw-1)) ...
                   Mprod_array3(Mtran_array3(Model.ZK(:,:,1:sw-1)),Model.LG(:,:,1:sw-1))]; % Stance
 A(:,:,sw:n)   = [ zeros(5,6,n-sw+1) ...
