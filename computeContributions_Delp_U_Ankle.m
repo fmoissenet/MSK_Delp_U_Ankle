@@ -163,7 +163,7 @@ b             = zeros(6,1,n);
 Astar         = zeros(6,30,n);
 A(:,:,1:sw-1) = [-Mprod_array3(Mtran_array3(Model.ZK(:,:,1:sw-1)),Model.LR(:,:,1:sw-1)) ...
                   Mprod_array3(Mtran_array3(Model.ZK(:,:,1:sw-1)),Model.LG(:,:,1:sw-1))]; % Stance
-A(:,:,sw:n)   = [ zeros(5,6,n-sw+1) ...
+A(:,:,sw:n)   = [ zeros(6,6,n-sw+1) ...
                   Mprod_array3(Mtran_array3(Model.ZK(:,:,sw:n)),Model.LG(:,:,sw:n))]; % Swing
 b(:,:,1:n)    = Mprod_array3(Mtran_array3(Model.ZK),Model.P);
 
@@ -209,12 +209,12 @@ for m = 1:10
     elseif m == 10
         i = [35,36]; % Ankle inversors
     end
-    A             = zeros(5,30,n);
-    b             = zeros(5,1,n);
-    Astar         = zeros(5,30,n);    
+    A             = zeros(6,30,n);
+    b             = zeros(6,1,n);
+    Astar         = zeros(6,30,n);    
     A(:,:,1:sw-1) = [-Mprod_array3(Mtran_array3(Model.ZK(:,:,1:sw-1)),Model.LR(:,:,1:sw-1)) ...
                       Mprod_array3(Mtran_array3(Model.ZK(:,:,1:sw-1)),Model.LG(:,:,1:sw-1))]; % Stance
-    A(:,:,sw:n)   = [zeros(5,6,n-sw+1) ...
+    A(:,:,sw:n)   = [zeros(6,6,n-sw+1) ...
                      Mprod_array3(Mtran_array3(Model.ZK(:,:,sw:n)),Model.LG(:,:,sw:n))]; % Swing
     b(:,:,1:n)    = Mprod_array3(Mtran_array3(Model.ZK),Mprod_array3(Model.Lever(:,i,:),Model.X(i,:,:)));
     

@@ -200,7 +200,7 @@ for i = 1:n
     [eigvector,~] = eig(Model.K2(:,:,i)'*Model.K2(:,:,i));
     Model.ZK2(:,:,i) = eigvector(:,1:25); % 25 first eigenvalues are 0
     [eigvector,~] = eig(Model.K(:,:,i)'*Model.K(:,:,i));
-    Model.ZK(:,:,i) = eigvector(:,1:5); % 5 first eigenvalues are 0
+    Model.ZK(:,:,i) = eigvector(:,1:6); % 6 first eigenvalues are 0
     Aeq = Model.ZK2(:,:,i)'*[Model.Lever(:,:,i), - Model.K1(:,:,i)'];
     Beq = Model.ZK2(:,:,i)'*...
         (Model.G(:,:,i)*Model.d2Qdt2(:,:,i) - Model.P(:,:,i) - Model.R(:,:,i));
