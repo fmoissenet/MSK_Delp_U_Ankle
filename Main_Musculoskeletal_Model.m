@@ -166,7 +166,7 @@ Model.Fl = [Model.X(43+6:43+8,1,1:n); ... % ACL, PCL, MCL
 % Bone forces (compression forces > 0)
 % About segment Y axis
 Model.Fb = Model.X(43+16:43+19,1,1:n); % Foot, tibia, patella, femur axial
-%%
+
 % Contributions
 Contribution = computeContributions_Delp_U_Ankle(Segment,Joint,Model,weight);
 %%
@@ -198,6 +198,7 @@ legend({'Gluteus maximus I', 'Gluteus maximus II', 'Gluteus maximus III', ...
     'Extensor digitorum longus', 'Extensor hallucis longus', ...
     'Flexor digitorum longus', 'Flexor hallucis longus'})
 
+% Figure 3
 % Figure 3
 figure
 plot(squeeze(1/(mass*9.81)*[Model.Fc(:,:,:); ...
