@@ -83,8 +83,7 @@ close all
 clear all
 
 % Select data file
-load('C:\Users\florent.moissenet\Documents\Professionnel\publications\articles\1- en cours\Moissenet - Contribution to CoP\Data\gait2.mat');
-% load('C:\Users\florent.moissenet\Documents\Professionnel\data\grand_challenge_5\Matlab Data\PS_ngait_og_ss7.mat');
+load('C:\Users\florent.moissenet\Documents\Professionnel\routines\github\MSK_Delp_U_Ankle\example\gait2.mat');
 mass = weight;
 % Segment = Multibody_Optimisation_Lower_Limb(Segment,'SSS');
 % Segment = Multibody_Optimisation_Lower_Limb(Segment,'UnSS');
@@ -176,7 +175,7 @@ Contribution = computeContributions_Delp_U_Ankle(Segment,Joint,Model,weight);
 % -------------------------------------------------------------------------
 
 % Figure 1
-Main_Joint_Kinematics
+Main_Joint_Kinematics;
 
 % Figure 2
 figure
