@@ -35,22 +35,12 @@
 % CHANGELOG
 % Created by Raphaël Dumas, Florent Moissent, Edouard Jouan
 % September 2012
-%__________________________________________________________________________
 %
-% Copyright (C) 2018  Raphael Dumas, Florent Moissenet
-% 
-% This program is free software: you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation, either version 3 of the License, or
-% any later version.
-% 
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-% 
-% You should have received a copy of the GNU General Public License
-% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+% Modified by Raphael Dumas
+% June 2019
+% Correction (definition of Segment(4).Q)
+% rP4 = Mprod_array3(repmat(NV65,[1,1,n]),Segment(5).Q) - rVs14(1,1)*u4
+% (not + rVs14(1,1)*u4)
 %__________________________________________________________________________
 
 function Segment = Modify_Segment(Segment)
@@ -58,7 +48,7 @@ function Segment = Modify_Segment(Segment)
 % Number of frames
 n = size(Segment(2).rM,3);
 
-%% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
 % Insert patella as segment #4 
 % -------------------------------------------------------------------------
 
@@ -79,21 +69,26 @@ Segment(4).Is = zeros(3,3); % Patella is considered as a ponctual mass
 Segment(4).rM = []; % No associated marker
 
 
-%% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
 % Model parameters to define segment #4
 % -------------------------------------------------------------------------
 
-% Expressed in the femur SCS
-rVs14 = [-42.48; 6.18; 0]./1000; % P_axis_patella
+% Point on the hinge axis in patella
+rVs14 = [-42.48; 6.18; 0]/1000;
+
+% Orientation of the hinge axis in femur
 delta_femur = 0.09; % Azimuth of the hinge axis
 nu_femur = 0.09; % Altitude of the hinge axis
 ns15 = [sin(nu_femur); ... % Orientation of the hinge axis
     cos(nu_femur)*sin(delta_femur); ...
     cos(nu_femur)*cos(delta_femur)];
-rVs65 = [4.77; 10.47; 0]./1000 + ... % Point of the hinge axis
+
+% Point of the hinge axis in femur
+rVs65 = [4.77; 10.47; 0]/1000 + ... % Point of the hinge axis in femur
     (-2.68/1000)*ns15; % Distance between femur and patella points of the hinge axis
-% Expressed in the patella SCS
-L(4) = 21/1000; % Position of patellar tendon origin in patella SCS
+
+% Position of patellar tendon origin in patella
+L(4) = 21/1000; % Length of patella
 
 % Segment parameter of femur
 L(5) = mean(sqrt(sum(Segment(5).Q(4:6,1,:) - ...
@@ -129,13 +124,13 @@ NV65 = [Segment(5).nV(1,6)*eye(3),... Interpolation matrix
         Segment(5).nV(3,6)*eye(3)];
     
     
-%% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
 % Definition of Segment(4).Q
 % -------------------------------------------------------------------------
 
 u4 = Vnorm_array3((Segment(3).Q(1:3,1,:) + Segment(5).Q(1:3,1,:))/2); % Mean of thigh and shank u axes
 v4 = Vnorm_array3(cross(Mprod_array3(repmat(NVZ5,[1,1,n]),Segment(5).Q),u4)); % Z axis of femur SCS in the NSCS
 w4 = Vnorm_array3(cross(u4,v4));
-rP4 = Mprod_array3(repmat(NV65,[1,1,n]),Segment(5).Q) + rVs14(1,1)*u4; % Distance from the point of the hinge axis to the origin of patella SCS 
+rP4 = Mprod_array3(repmat(NV65,[1,1,n]),Segment(5).Q) - rVs14(1,1)*u4; % Distance from the point of the hinge axis to the origin of patella
 rD4 = rP4 - L(4)*v4;
 Segment(4).Q = [u4;rP4;rD4;w4];
