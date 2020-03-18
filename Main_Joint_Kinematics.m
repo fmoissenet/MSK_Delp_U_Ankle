@@ -49,22 +49,6 @@
 % September 2012
 % Normalisation of the 2d vector of the non-orthogonal projection on JCS axes
 %__________________________________________________________________________
-%
-% Copyright (C) 2018  Raphael Dumas, Florent Moissenet
-% 
-% This program is free software: you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation, either version 3 of the License, or
-% any later version.
-% 
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-% 
-% You should have received a copy of the GNU General Public License
-% along with this program.  If not, see <http://www.gnu.org/licenses/>.
-%__________________________________________________________________________
 
 
 % Number of frames
@@ -81,7 +65,7 @@ for i = 2:5 % From i = 2 ankle to i = 5 hip
     % to the distal segment axes
     % (with origin at point P and with X = u)
     if i == 3 % Tibio-femoral
-        Joint(3).T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(5).Q)),...
+        Joint(3).T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(5).Q)),... 
             Q2Tuv_array3(Segment(3).Q));
     elseif i == 5 % Hip
         Joint(5).T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(6).Q)),...
