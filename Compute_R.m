@@ -28,27 +28,32 @@
 % Minv_array3.m
 %
 % MATLAB VERSION
-% Matlab R2012a
+% Matlab R2020a
 %__________________________________________________________________________
 %
 % CHANGELOG
 % Created by Raphaël Dumas, Florent Moissent, Edouard Jouan
 % September 2012
+%
+% Modified by Raphael Dumas
+% March 2020
+% Generic vs. Informed structures (Segment, Joint, Model)
+% n,f,fc as Model.Informed fields
 %__________________________________________________________________________
 
 
 function Model = Compute_R(Segment,Joint,Model)
 
 % Number of frames
-n = size(Segment(2).rM,3);
+n = Model.Informed.n;
+
 % Initialisation
-Model.R = zeros(48,1,n);
 MN2 = zeros(3,3,n);
 
 % Imput data
-F1 = Joint(1).F; % Force of the foot on ground
-M1 = Joint(1).M; % Moment of the foot on ground at the CoP
-rP1 = Segment(1).Q(4:6,:,:); % rP1 = CoP
+F1 = Joint(1).Informed.F; % Force of the foot on ground
+M1 = Joint(1).Informed.M; % Moment of the foot on ground at the CoP
+rP1 = Segment(1).Informed.Q(4:6,:,:); % rP1 = CoP
 
 % Transpose of the interpolation matrix of rP2
 NP2t = [zeros(3,3,n);...
@@ -57,10 +62,10 @@ NP2t = [zeros(3,3,n);...
     zeros(3,3,n)];
 
 % Segment parameters
-u2 = Segment(2).Q(1:3,1,:);
-rP2 = Segment(2).Q(4:6,1,:);
-rD2 = Segment(2).Q(7:9,1,:);
-w2 = Segment(2).Q(10:12,1,:);
+u2 = Segment(2).Informed.Q(1:3,1,:);
+rP2 = Segment(2).Informed.Q(4:6,1,:);
+rD2 = Segment(2).Informed.Q(7:9,1,:);
+w2 = Segment(2).Informed.Q(10:12,1,:);
 
 % MN (interpolations and directions) 
 MN2(1:3,2,:) = rP2 - rD2;
@@ -77,7 +82,7 @@ Bstar2(1:3,3,:) = cross(-(rP2 - rD2),w2);
 Nstar2t = Mprod_array3(MN2,Minv_array3(Bstar2));
 
 % Generalised ground reaction forces
-Model.R = [Mprod_array3(NP2t,-F1) + ...
+Model.Informed.R = [Mprod_array3(NP2t,-F1) + ...
     Mprod_array3(Nstar2t,(-M1 + cross((rP1 - rP2),-F1)));...
     zeros(12,1,n);...
     zeros(12,1,n);...

@@ -29,7 +29,7 @@
 % Vnop_array3
 % 
 % MATLAB VERSION
-% Matlab R2007b
+% Matlab R2020a
 %__________________________________________________________________________
 %
 % CHANGELOG
@@ -48,11 +48,17 @@
 % Modified by Raphael Dumas
 % September 2012
 % Normalisation of the 2d vector of the non-orthogonal projection on JCS axes
+%
+% Modified by Raphael Dumas
+% March 2020
+% Generic vs. Informed structures (Segment, Joint, Model)
+% n,f,fc as Model.Informed fields
 %__________________________________________________________________________
 
 
 % Number of frames
-n = size(Segment(2).Q,3);
+n = Model.Informed.n;
+
 % Interpolation parameters
 k = (1:n)';
 ko = (linspace(1,n,100))';
@@ -65,73 +71,73 @@ for i = 2:5 % From i = 2 ankle to i = 5 hip
     % to the distal segment axes
     % (with origin at point P and with X = u)
     if i == 3 % Tibio-femoral
-        Joint(3).T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(5).Q)),... 
-            Q2Tuv_array3(Segment(3).Q));
+        Joint(3).Informed.T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(5).Informed.Q)),... 
+            Q2Tuv_array3(Segment(3).Informed.Q));
     elseif i == 5 % Hip
-        Joint(5).T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(6).Q)),...
-            Q2Tuv_array3(Segment(5).Q));
+        Joint(5).Informed.T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(6).Informed.Q)),...
+            Q2Tuv_array3(Segment(5).Informed.Q));
         % Origin of proximal segment moved at the mean position of Pi
         % in proximal segment (rather than endpoint Di+1)
-        Joint(5).T(1:3,4,:) = Joint(5).T(1:3,4,:) - ...
-            repmat(mean(Joint(5).T(1:3,4,:),3),[1 1 n]);
+        Joint(5).Informed.T(1:3,4,:) = Joint(5).Informed.T(1:3,4,:) - ...
+            repmat(mean(Joint(5).Informed.T(1:3,4,:),3),[1 1 n]);
     else % Ankle, patello-femoral
-        Joint(i).T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(i+1).Q)),...
-            Q2Tuw_array3(Segment(i).Q));
+        Joint(i).Informed.T = Mprod_array3(Tinv_array3(Q2Twu_array3(Segment(i+1).Informed.Q)),...
+            Q2Tuw_array3(Segment(i).Informed.Q));
     end
     
     % Joint coordinate system
     if i == 2 % ZYX sequence of mobile axis for ankle
         % Internal/extenal rotation on floating axis 
         % Euler angles
-        Joint(i).Euler = R2mobileZYX_array3(Joint(i).T(1:3,1:3,:));
+        Joint(i).Informed.Euler = R2mobileZYX_array3(Joint(i).Informed.T(1:3,1:3,:));
         % Joint displacement about the Euler angle axes
-        Joint(i).dj = Vnop_array3(...
-            Joint(i).T(1:3,4,:),... Di+1 to Pi in SCS of segment i+1
+        Joint(i).Informed.dj = Vnop_array3(...
+            Joint(i).Informed.T(1:3,4,:),... Di+1 to Pi in SCS of segment i+1
             repmat([0;0;1],[1 1 n]),... % Zi+1 in SCS of segment i+1
-            Vnorm_array3(cross(repmat([0;0;1],[1 1 n]),Joint(i).T(1:3,1,:))),...
-            Joint(i).T(1:3,1,:)); % Xi in SCS of segment i+1
+            Vnorm_array3(cross(repmat([0;0;1],[1 1 n]),Joint(i).Informed.T(1:3,1,:))),...
+            Joint(i).Informed.T(1:3,1,:)); % Xi in SCS of segment i+1
     else % ZXY sequence of mobile axis
         % Euler angles
-        Joint(i).Euler = R2mobileZXY_array3(Joint(i).T(1:3,1:3,:));
+        Joint(i).Informed.Euler = R2mobileZXY_array3(Joint(i).Informed.T(1:3,1:3,:));
         % Joint displacement about the Euler angle axes
-        Joint(i).dj = Vnop_array3(...
-            Joint(i).T(1:3,4,:),... Di+1 to Pi in SCS of segment i+1
+        Joint(i).Informed.dj = Vnop_array3(...
+            Joint(i).Informed.T(1:3,4,:),... Di+1 to Pi in SCS of segment i+1
             repmat([0;0;1],[1 1 n]),... % Zi+1 in SCS of segment i+1
-            Vnorm_array3(cross(Joint(i).T(1:3,2,:),repmat([0;0;1],[1 1 n]))),...
-            Joint(i).T(1:3,2,:)); % Yi in SCS of segment i+1
+            Vnorm_array3(cross(Joint(i).Informed.T(1:3,2,:),repmat([0;0;1],[1 1 n]))),...
+            Joint(i).Informed.T(1:3,2,:)); % Yi in SCS of segment i+1
     end
 
 end
 
 % 100% of gait cycle (or of propulsive cycle)
 % Ankle joint angles and displacements
-FE2 = interp1(k,permute(Joint(2).Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
-IER2 = interp1(k,permute(Joint(2).Euler(1,2,:),[3,2,1])*180/pi,ko,'spline');
-AA2 = interp1(k,permute(Joint(2).Euler(1,3,:),[3,2,1])*180/pi,ko,'spline');
-LM2 = interp1(k,permute(Joint(2).dj(1,1,:),[3,2,1]),ko,'spline');
-PD2 = interp1(k,permute(Joint(2).dj(2,1,:),[3,2,1]),ko,'spline');
-AP2 = interp1(k,permute(Joint(2).dj(3,1,:),[3,2,1]),ko,'spline');
+FE2 = interp1(k,permute(Joint(2).Informed.Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
+IER2 = interp1(k,permute(Joint(2).Informed.Euler(1,2,:),[3,2,1])*180/pi,ko,'spline');
+AA2 = interp1(k,permute(Joint(2).Informed.Euler(1,3,:),[3,2,1])*180/pi,ko,'spline');
+LM2 = interp1(k,permute(Joint(2).Informed.dj(1,1,:),[3,2,1]),ko,'spline');
+PD2 = interp1(k,permute(Joint(2).Informed.dj(2,1,:),[3,2,1]),ko,'spline');
+AP2 = interp1(k,permute(Joint(2).Informed.dj(3,1,:),[3,2,1]),ko,'spline');
 % Tibio-femoral joint angles and displacements
-FE3 = interp1(k,permute(Joint(3).Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
-AA3 = interp1(k,permute(Joint(3).Euler(1,2,:),[3,2,1])*180/pi,ko,'spline');
-IER3 = interp1(k,permute(Joint(3).Euler(1,3,:),[3,2,1])*180/pi,ko,'spline');
-LM3 = interp1(k,permute(Joint(3).dj(1,1,:),[3,2,1]),ko,'spline');
-AP3 = interp1(k,permute(Joint(3).dj(2,1,:),[3,2,1]),ko,'spline');
-PD3 = interp1(k,permute(Joint(3).dj(3,1,:),[3,2,1]),ko,'spline');
+FE3 = interp1(k,permute(Joint(3).Informed.Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
+AA3 = interp1(k,permute(Joint(3).Informed.Euler(1,2,:),[3,2,1])*180/pi,ko,'spline');
+IER3 = interp1(k,permute(Joint(3).Informed.Euler(1,3,:),[3,2,1])*180/pi,ko,'spline');
+LM3 = interp1(k,permute(Joint(3).Informed.dj(1,1,:),[3,2,1]),ko,'spline');
+AP3 = interp1(k,permute(Joint(3).Informed.dj(2,1,:),[3,2,1]),ko,'spline');
+PD3 = interp1(k,permute(Joint(3).Informed.dj(3,1,:),[3,2,1]),ko,'spline');
 % Patello-femoral joint angles and displacements
-FE4 = interp1(k,permute(Joint(4).Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
-MLR4 = interp1(k,permute(Joint(4).Euler(1,2,:),[3,2,1])*180/pi,ko,'spline'); % Medial latetal rotation about X floating
-MLT4 = interp1(k,permute(Joint(4).Euler(1,3,:),[3,2,1])*180/pi,ko,'spline'); % Medial lateral tilt about Y axis
-LM4 = interp1(k,permute(Joint(4).dj(1,1,:),[3,2,1]),ko,'spline'); % Lateral medial shift
-AP4 = interp1(k,permute(Joint(4).dj(2,1,:),[3,2,1]),ko,'spline');
-PD4 = interp1(k,permute(Joint(4).dj(3,1,:),[3,2,1]),ko,'spline');
+FE4 = interp1(k,permute(Joint(4).Informed.Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
+MLR4 = interp1(k,permute(Joint(4).Informed.Euler(1,2,:),[3,2,1])*180/pi,ko,'spline'); % Medial latetal rotation about X floating
+MLT4 = interp1(k,permute(Joint(4).Informed.Euler(1,3,:),[3,2,1])*180/pi,ko,'spline'); % Medial lateral tilt about Y axis
+LM4 = interp1(k,permute(Joint(4).Informed.dj(1,1,:),[3,2,1]),ko,'spline'); % Lateral medial shift
+AP4 = interp1(k,permute(Joint(4).Informed.dj(2,1,:),[3,2,1]),ko,'spline');
+PD4 = interp1(k,permute(Joint(4).Informed.dj(3,1,:),[3,2,1]),ko,'spline');
 % Hip joint angles and displacements
-FE5 = interp1(k,permute(Joint(5).Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
-AA5 = interp1(k,permute(Joint(5).Euler(1,2,:),[3,2,1])*180/pi,ko,'spline');
-IER5 = interp1(k,permute(Joint(5).Euler(1,3,:),[3,2,1])*180/pi,ko,'spline');
-LM5 = interp1(k,permute(Joint(5).dj(1,1,:),[3,2,1]),ko,'spline');
-AP5 = interp1(k,permute(Joint(5).dj(2,1,:),[3,2,1]),ko,'spline');
-PD5 = interp1(k,permute(Joint(5).dj(3,1,:),[3,2,1]),ko,'spline');
+FE5 = interp1(k,permute(Joint(5).Informed.Euler(1,1,:),[3,2,1])*180/pi,ko,'spline');
+AA5 = interp1(k,permute(Joint(5).Informed.Euler(1,2,:),[3,2,1])*180/pi,ko,'spline');
+IER5 = interp1(k,permute(Joint(5).Informed.Euler(1,3,:),[3,2,1])*180/pi,ko,'spline');
+LM5 = interp1(k,permute(Joint(5).Informed.dj(1,1,:),[3,2,1]),ko,'spline');
+AP5 = interp1(k,permute(Joint(5).Informed.dj(2,1,:),[3,2,1]),ko,'spline');
+PD5 = interp1(k,permute(Joint(5).Informed.dj(3,1,:),[3,2,1]),ko,'spline');
 
 
 % Figure for ankle

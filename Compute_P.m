@@ -26,31 +26,36 @@
 % CALLED FUNCTIONS (FROM MUSCULO-SKELETAL TOOLBOX)
 %
 % MATLAB VERSION
-% Matlab R2012a
+% Matlab R2020a
 %__________________________________________________________________________
 %
 % CHANGELOG
 % Created by Raphaël Dumas, Florent Moissent, Edouard Jouan
 % September 2012
+% Modified by Raphael Dumas
+%
+% March 2020
+% Generic vs. Informed structures (Segment, Joint, Model)
+% n,f,fc as Model.Informed fields
 %__________________________________________________________________________
 
 
 function Model = Compute_P(Segment,Model)
 
 % Number of frames
-n = size(Segment(2).rM,3);
+n = Model.Informed.n;
 
 % Initialisation
 E33 = eye(3,3);
 P = [];
 
-for i = 2:5 % From foot (i = 2) to thigh (i = 5) 
+for i = 2:5 % From Foot (i = 2) to Thigh (i = 5) 
 P = [P; ...
-    [Segment(i).nC(1,1)*E33,...
-    (1 + Segment(i).nC(2,1))*E33,...
-    - Segment(i).nC(2,1)*E33,...
-    Segment(i).nC(3,1)*E33]'*Segment(i).m*[0;-9.81;0]];
+    [Segment(i).Informed.nC(1,1)*E33,...
+    (1 + Segment(i).Informed.nC(2,1))*E33,...
+    - Segment(i).Informed.nC(2,1)*E33,...
+    Segment(i).Informed.nC(3,1)*E33]'*Segment(i).Informed.m*[0;-9.81;0]];
 end
 
 % Generalised weight
-Model.P = repmat(P,[1,1,n]);
+Model.Informed.P = repmat(P,[1,1,n]);
