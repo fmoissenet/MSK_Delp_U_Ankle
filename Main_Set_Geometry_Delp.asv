@@ -1,4 +1,35 @@
+% MAIN PROGRAM
+% Main_Set_Geometry_Delp.m
+%__________________________________________________________________________
 %
+% PURPOSE
+% Defintion of generic model data (markers, lengths, angles...)
+%
+% SYNOPSIS
+% N/A (i.e., main program)
+%
+% DESCRIPTION
+%
+% REFERENCE
+%__________________________________________________________________________
+%
+% CALLED FUNCTIONS (FROM MUSCULO-SKELETAL TOOLBOX)
+% (SCoRE_array3.m)
+% Mprod_array3.m
+% Tinv_array3.m
+% Q2Twu_array3.m
+% Q2Tuv_array3.m
+% R2mobileZXY_array3.m
+% 
+% MATLAB VERSION
+% Matlab R2020a
+%__________________________________________________________________________
+%
+% CHANGELOG
+% Created by Raphael Dumas
+% March 2020
+%__________________________________________________________________________
+
 % Number of frames
 n = Model.Informed.n;
 
@@ -6,72 +37,76 @@ n = Model.Informed.n;
 %% ------------------------------------------------------------------------
 % Generic translations form reference origins and points in Delp
 % All coordinates in "ground" (origin at mid-ASIS)
-% Transformations between segments are only translation
+% Transformations between segments are only translations
 % -------------------------------------------------------------------------
 
-Femur_Origin = [-0.0707; -0.0661; 0.0835]; % Right hip joint centre
-Tibia_Origin = [-0.0707; -0.0661; 0.0835] + ...% From origin to hip joint centre = femur origin
+Femur_Origin = [-0.0707; -0.0661; 0.0835]; % Right hip joint centre (in delpjnt.jnt)
+Tibia_Origin = Femur_Origin + ... 
     [-0.00525; -0.3960; 0]; % Values of knee tx and ty at 0 degree of flexion
-Talus_Origin = [-0.0707; -0.0661; 0.0835] + ...% From origin to hip joint centre
-    [-0.00525; -0.3960; 0] + ...  % Values of knee tx, ty, and tz at 0 degree of flexion
+Talus_Origin = Tibia_Origin + ...  
     [0; -0.426; 0]; % From tibia to talus origins
-Calca_Origin = [-0.0707; -0.0661; 0.0835] + ... % From origin to hip joint centre
-    [-0.00525;-0.3960; 0] + ... % Values of knee tx and ty at 0 degree of flexion
-    [0; -0.426; 0] + ... % From tibia to talus origins
-    [-0.04877; -0.04195; 0.00792]; ... % From talus to calcaneus origins
-Toe_Origin = [-0.0707; -0.0661; 0.0835] + ... % From origin to hip joint centre
-    [-0.00525;-0.3960; 0] + ... % Values of knee tx and ty at 0 degree of flexion
-    [0; -0.426; 0] + ... % From tibia to talus origins
-    [-0.04877; -0.04195; 0.00792] +  ... % From talus to calcaneus origins
-    [0.1768; -0.002; 0.00108];
+Calcaneous_Origin = Talus_Origin + ...
+    [-0.04877; -0.04195; 0.00792]; % From talus to calcaneus origins
+Toe_Origin = Calcaneous_Origin + ...
+    [0.1768; -0.002; 0.00108]; % From calcaneus to toe origins
 
-HJC = Femur_Origin;
-LPSIS = [-0.148; 0.0; -0.047]; % Directly in ground
+SACR = [-0.17; 0.0; 0.0]; % Directly in ground
+RASIS = [0.0; 0.0; 0.128]; % Directly in ground (ASIS is on the bone!)
 RPSIS = [-0.148; 0.0; 0.047]; % Directly in ground
-LASIS = [0.0; 0.0; -0.128]; % Directly in ground
-RASIS = [0.0; 0.0; 0.128]; % Directly in ground
-TROC = [-0.0707; -0.0661; 0.0835] + ...% From origin to hip joint centre = femur origin
-    [-0.005; -0.042; 0.093];
-LFE = [-0.0707; -0.0661; 0.0835] + ...% From origin to hip joint centre = femur origin
-    [0.0; -0.404; 0.05];
-MFE = [-0.0707; -0.0661; 0.0835] + ...% From origin to hip joint centre = femur origin
-    + [0.0; -0.404; -0.05];
-LM = [-0.0707; -0.0661; 0.0835] + ... % From origin to hip joint centre = femur origin
-    [-0.00525;-0.3960; 0] + ... % Values of knee tx and ty at 0 degree of flexion
-    [-0.005; -0.41; 0.053];
-MM = [-0.0707; -0.0661; 0.0835] + ... % From origin to hip joint centre = femur origin
-    [-0.00525;-0.3960; 0] + ... % Values of knee tx and ty at 0 degree of flexion
-    [0.006; -0.3888; -0.038];
-FH = [-0.0707; -0.0661; 0.0835]  + ... % From origin to hip joint centre = femur origin
-    [-0.00525;-0.3960; 0] + ... % Values of knee tx and ty at 0 degree of flexion
-    [0.0256; -0.04157; 0.05976];
-TT = [-0.0707; -0.0661; 0.0835]  + ... % From origin to hip joint centre = femur origin
-    [-0.00525;-0.3960; 0] + ... % Values of knee tx and ty at 0 degree of flexion
-    [0.039; -0.082; 0.000]; % TT is on the bone !
-M1 = [0.05; -0.93; 0.045]; % Directly in ground
-M5 = [0.007; -0.93; 0.143]; % Directly in ground
-HEEL = [-0.142; -0.927; 0.085]; % Directly in ground
+LPSIS = [-0.148; 0.0; -0.047]; % Directly in ground
+LASIS = [0.0; 0.0; -0.128]; % Directly in ground (ASIS is on the bone!)
+LJC = [-0.1055; 0.072; 0]; % Directly in ground (virtual palpation on sacrum.asc)
+HJC = Femur_Origin;
+TROC = Femur_Origin + [-0.005; -0.042; 0.093];
+LFE = Femur_Origin + [0.0; -0.404; 0.05];
+MFE = Femur_Origin + [0.0; -0.404; -0.05];
+LM = Tibia_Origin + [-0.005; -0.41; 0.053];
+MM = Femur_Origin + Tibia_Origin + [0.006; -0.3888; -0.038];
+FH = Femur_Origin + Tibia_Origin + [0.0256; -0.04157; 0.05976];
+TT = Femur_Origin + Tibia_Origin + ... 
+    [0.039; -0.082; 0.000]; % (Delp's thesis) TT is in the bone!
+% "tibial tuberosity of the bone model is too large"
+TOE = Femur_Origin + Tibia_Origin + Talus_Origin + Calcaneous_Origin + ...
+    [-0.02; 0.018; -0.01] + ... % From calcaneus to "foot marker" origins
+    [0.190; 0.0; 0.0];
+B1 = Femur_Origin + Tibia_Origin + Talus_Origin + Calcaneous_Origin + ...
+    [-0.02; 0.018; -0.01] + ... % From calcaneus to "foot marker" origins
+    [0.13; 0.0; -0.03]; % Base of metatarsal 1
+B5 = Femur_Origin + Tibia_Origin + Talus_Origin + Calcaneous_Origin + ...
+    [-0.02; 0.018; -0.01] + ... % From calcaneus to "foot marker" origins
+    [0.13; 0.0; 0.05]; % Base of metatarsal 5
+HEEL = Femur_Origin + Tibia_Origin + Talus_Origin + Calcaneous_Origin + ...
+    [-0.02; 0.018; -0.01] + ... % From calcaneus to "foot marker" origins
+    [0; 0; 0];
+M1 = [0.05; -0.93; 0.045]; % Directly in ground (virtual palpation on foot.asc)
+M5 = [0.007; -0.93; 0.143]; % Directly in ground (virtual palpation on foot.asc)
 
-% Translation from pelvis origin to mid-hip joint centers
-t_midHJC2pelvis = [0;0;0] - [-0.0707; -0.0661; 0]; % rD6 is mid-hip joint centres
 
-% Translation from mid-epicondyles to tibia origin
-t_midepicondyles2tibia = Tibia_Origin - (LFE + MFE)/2; % rP3 is mid-epicondyles
+% Translation from lumbar joint centre to pelvis origin
+t_lumbar2pelvis = [0;0;0] - LJC; % P6 is lumbar joint centre
 
-% Translation from mid-epicondyles to talus origin
-t_midepicondyles2talus = Talus_Origin - (LFE + MFE)/2; % Virtual marker rV13 is talus origin
+% Translation from mid-epicondyles (enforced in sagittal plane) to tibia origin
+t_midepicondyles2tibia = [Tibia_Origin(1:2,1);0] - ...
+    [(LFE(1:2,1) + MFE(1:2,1))/2; 0] ;% rP3 is mid-epicondyles
 
-% Translation from mid-malleoli to talus origin
-t_midmalleoli2talus = Talus_Origin - (LM + MM)/2; % Virtual marker rV12 is talus origin
+% Translation from patella proximal endpoint to origin
+t_proximal2patella = [0; -(0.0264 + 0.025/2); 0]; % CoM assumed at mid-endpoints
+% Patella CoM + half patella heigth on Y-axis
 
-% Translation from mid-malleoli to calcaneous
-t_midmalleoli2calcaneus = Calca_Origin - (LM + MM)/2; % rP2 is mid-malleoli
+% Translation from mid-epicondyles (enforced in sagittal plane) to talus origin
+t_midepicondyles2talus = [Talus_Origin(1:2,1);0] - ...
+    [(LFE(1:2,1) + MFE(1:2,1))/2; 0]; % Virtual marker rV13 is talus origin
 
-% Translation from talus origin to subtalar axis
-t_talus2subtalar = [-0.048770; -0.041950; -0.007920];
+% Translation from mid-malleoli (enforced in sagittal plane) to talus origin
+t_midmalleoli2talus = [Talus_Origin(1:2,1);0] - ...
+    [(LM(1:2) + MM(1:2))/2; 0]; % Virtual marker rV12 is talus origin
+
+% Translation from mid-malleoli (enforced in sagittal plane) to calcaneous
+t_midmalleoli2calcaneus = [Calcaneous_Origin(1:2,1);0] - ...
+    [(LM(1:2,1) + MM(1:2,1))/2; 0]; % rP2 is mid-malleoli
 
 % Translation form calcaneous to toe origins
-t_calcaneous2toe = Toe_Origin - Calca_Origin;
+t_calcaneous2toe = Toe_Origin - Calcaneous_Origin;
 
 
 %% ------------------------------------------------------------------------
@@ -80,24 +115,47 @@ t_calcaneous2toe = Toe_Origin - Calca_Origin;
 % -------------------------------------------------------------------------
 
 Segment(2).Generic.W = norm(M1 - M5); % Between metatarsal heads
-Segment(2).Generic.L = norm((M1 + M5)/2 - (LM + MM)/2); % From mid-malleolus to mid-metatarsal heads
+Segment(2).Generic.L = norm((M1(1:2,1) + M5(1:2,1))/2 - ... % From mid-malleolus to mid-metatarsal heads
+    (LM(1:2,1) + MM(1:2,1))/2); % In sagittal plane
 Segment(3).Generic.W = norm(MM -LM); % Between malleoli
-Segment(3).Generic.L = norm((LM + MM)/2 - (LFE + MFE)/2); % From mid-epicondyles to mid-malleolus
+Segment(3).Generic.L = norm((LM(1:2,1) + MM(1:2,1))/2 - ... % From mid-epicondyles to mid-malleolus
+    (LFE(1:2,1) + MFE(1:2,1))/2); % In sagittal plane
 % Segment(4).Generic.W not defined
-Segment(4).Generic.L = norm([0; 0.0264 + 0.025/2; 0]);  % Patella CoM + half patella heigth on Y-axis
+Segment(4).Generic.L = norm(t_proximal2patella);
 Segment(5).Generic.W = norm(MFE - LFE); % Between epicondyles
-Segment(5).Generic.L = norm((LFE + MFE)/2 - HJC); % From hip joint centre to mid-epicondyles
+Segment(5).Generic.L = norm([(LFE(1:2,1) + MFE(1:2,1))/2; 0] - ... % From hip joint centre to mid-epicondyles 
+    HJC); % In sagittal plane
 Segment(6).Generic.W = norm(LASIS - RASIS); % Between anterior iliac spines
-% Segment(6).Generic.L not defined
+Segment(6).Generic.L = norm([Femur_Origin(1:2,1);0] - LJC); % From LJC to midHJC
 
-% Segment angles for foot
+% Other information
+Segment(2).Generic.alpha = 90;
+Segment(2).Generic.beta = 90;
 Segment(2).Generic.gamma = ...
     acosd(dot(((M1 + M5)/2 - HEEL)/norm((M1 + M5)/2 - HEEL),...
-(LM + MM)/2 - (M1 + M5)/2)/Segment(2).Generic.L);
-    
-% ?????????????????????????????????????????????????????????????????????????
+    ((LM + MM)/2 - (M1 + M5)/2)/Segment(2).Generic.L));
+Segment(3).Generic.alpha = 90;
+Segment(3).Generic.beta = 90;
+Segment(3).Generic.gamma = 90;
+Segment(4).Generic.alpha = 90;
+Segment(4).Generic.beta = 90;
+Segment(4).Generic.gamma = 90;
+Segment(5).Generic.alpha = 90;
+Segment(5).Generic.beta = 90;
+Segment(5).Generic.gamma = 90;
+Segment(6).Generic.alpha = 90;
+Segment(6).Generic.beta = 90;
+Segment(6).Generic.gamma = ...
+    acosd(dot(((LASIS + RASIS)/2 - SACR)/norm((LASIS + RASIS)/2 - SACR),...
+    (LJC - [Femur_Origin(1:2,1);0])/Segment(6).Generic.L));
+%
 Model.Generic.Height = 1.80; % A subject that is about 1.8 m
-% ?????????????????????????????????????????????????????????????????????????
+Model.Generic.L = Segment(2).Generic.L*sind(Segment(2).Generic.gamma) + ...
+    Segment(3).Generic.L + ...
+    Segment(5).Generic.L + ...
+    Segment(6).Generic.L*sind(Segment(6).Generic.gamma);
+Joint(4).Generic.d(1,1) = 55;
+
 
 %% ------------------------------------------------------------------------
 % Generic virtual markers
@@ -108,9 +166,12 @@ Model.Generic.Height = 1.80; % A subject that is about 1.8 m
 
 Segment(2).Generic.T = eye(4);
 Segment(2).Generic.T(1:3,4) = (LM + MM)/2;
-Segment(2).Generic.rMs(:,1) = inv(Segment(2).Generic.T)*[HEEL;1];
-Segment(2).Generic.rMs(:,2) = inv(Segment(2).Generic.T)*[M1;1];
-Segment(2).Generic.rMs(:,3) = inv(Segment(2).Generic.T)*[M5;1];
+Segment(2).Generic.rMs(:,1) = inv(Segment(2).Generic.T)*[TOE;1];
+Segment(2).Generic.rMs(:,2) = inv(Segment(2).Generic.T)*[B1;1];
+Segment(2).Generic.rMs(:,3) = inv(Segment(2).Generic.T)*[B5;1];
+Segment(2).Generic.rMs(:,4) = inv(Segment(2).Generic.T)*[HEEL;1];
+Segment(2).Generic.rMs(:,5) = inv(Segment(2).Generic.T)*[M1;1];
+Segment(2).Generic.rMs(:,6) = inv(Segment(2).Generic.T)*[M5;1];
 Segment(2).Generic.rMs(4,:) = [];
 %
 Segment(3).Generic.T = eye(4);
@@ -123,16 +184,20 @@ Segment(3).Generic.rMs(4,:) = [];
 %
 Segment(5).Generic.T = eye(4);
 Segment(5).Generic.T(1:3,4) = HJC;
-Segment(5).Generic.rMs(:,1) = inv(Segment(5).Generic.T)*[LFE;1];
-Segment(5).Generic.rMs(:,2) = inv(Segment(5).Generic.T)*[MFE;1];
-Segment(5).Generic.rMs(:,3) = inv(Segment(5).Generic.T)*[TROC;1]; 
+Segment(5).Generic.rMs(:,1) = inv(Segment(5).Generic.T)*[TROC;1]; 
+Segment(5).Generic.rMs(:,2) = inv(Segment(5).Generic.T)*[LFE;1];
+Segment(5).Generic.rMs(:,3) = inv(Segment(5).Generic.T)*[MFE;1];
 Segment(5).Generic.rMs(4,:) = [];
 %
 Segment(6).Generic.T = eye(4);
-Segment(6).Generic.T(1:3,4) = -t_midHJC2pelvis;
-Segment(6).Generic.rMs(:,1) = inv(Segment(6).Generic.T)*[(LPSIS+RPSIS)/2;1];
-Segment(6).Generic.rMs(:,2) = inv(Segment(6).Generic.T)*[LASIS;1];
-Segment(6).Generic.rMs(:,3) = inv(Segment(6).Generic.T)*[RASIS;1];
+Segment(6).Generic.T(1:3,4) = LJC;
+Segment(6).Generic.rMs(:,1) = inv(Segment(6).Generic.T)*[SACR;1];
+Segment(6).Generic.rMs(:,2) = inv(Segment(6).Generic.T)*[RASIS;1];
+Segment(6).Generic.rMs(:,3) = inv(Segment(6).Generic.T)*[RPSIS;1];
+Segment(6).Generic.rMs(:,4) = inv(Segment(6).Generic.T)*[LPSIS;1];
+Segment(6).Generic.rMs(:,5) = inv(Segment(6).Generic.T)*[LASIS;1];
+Segment(6).Generic.rMs(:,6) = inv(Segment(6).Generic.T)*[LJC;1];
+Segment(6).Generic.rMs(:,7) = inv(Segment(6).Generic.T)*[HJC;1];
 Segment(6).Generic.rMs(4,:) = [];
 
 
@@ -243,8 +308,8 @@ Segment(6).Generic.rMs(4,:) = [];
 % -40.0, -0.0211; ...
 % -20.0, -0.0219; ...
 % -10.0, -0.0223; ...
-% 0.0, -0.022688];
-% % 0.3, -0.0227];
+% 0.0, -0.022688]; % Value at 0 interpolated
+% -0.286, -0.0227];
 % % Interpolation
 % ty_25(:,1) = [-120:5:0]';
 % ty_25(:,2) = interp1q(ty(:,1),ty(:,2),[-120:5:0]');
@@ -308,7 +373,7 @@ rCsp = [-0.0377; 0.0318; -0.0000];
 % -------------------------------------------------------------------------
 
 % Subtalar axis position in Foot segment
-Segment(2).Generic.rVs(:,1) = t_midmalleoli2talus + t_talus2subtalar/2;
+Segment(2).Generic.rVs(:,1) = t_midmalleoli2talus;
 
 % Subtalar axis direction in Foot segment
 Segment(2).Generic.ns(:,1) = [0.781;0.600;-0.120]/norm([0.781;0.600;-0.120]);
@@ -318,7 +383,7 @@ Segment(3).Generic.ns(:,1) = [-0.105; -0.174; 0.979]/norm([-0.105; -0.174; 0.979
 
 % Ankle axis position in Shank segment
 % Ankle and subtalar axes superimposed (as well as Y-axes of foot and shank in neutral position)
-Segment(3).Generic.rVs(:,1) = t_midepicondyles2talus;
+Segment(3).Generic.rVs(:,1) = -[0; Segment(3).Generic.L; 0] + t_midmalleoli2talus;
 
 
 %% ------------------------------------------------------------------------
@@ -383,7 +448,7 @@ Segment(5).Generic.rVs(:,6) = rCsf; % SCoRE results
 Segment(5).Generic.ns(:,1) = [0;0;1];
 
 % Hinge in patella
-Segment(4).Generic.rVs(:,1) = rCsp; % SCoRE results
+Segment(4).Generic.rVs(:,1) = t_proximal2patella + rCsp; % SCoRE results
 % Origin at distal endpoint
 % Axes of patella and femur assumed aligned in neutral posture
 Segment(4).Generic.ns(:,1) = Segment(5).Generic.ns(:,1); 
@@ -399,8 +464,7 @@ Segment(3).Generic.rVs(:,9) = TT - (LFE + MFE)/2; % TT is on the bone !
 % -------------------------------------------------------------------------
     
 % Hip
-Segment(6).Generic.rVs(:,1) = [0; 0; 0.0835]; % Hip joint centre on Z-axis
-% Origin at distal endpoint
+Segment(6).Generic.rVs(:,1) = t_lumbar2pelvis + Femur_Origin; % Hip joint centre on Z-axis
 
 
 %% ------------------------------------------------------------------------
@@ -514,13 +578,17 @@ Segment(3).Generic.rVs(:,28) = t_midepicondyles2tibia + ...
 % Origin at distal endpoint
 %
 % Insertion of rectus femoris
-Segment(4).Generic.rVs(:,2) = [0.0121; 0.0437; -0.0010];
+Segment(4).Generic.rVs(:,2) = t_proximal2patella + ...
+    [0.0121; 0.0437; -0.0010];
 % Insertion of vastus medialis
-Segment(4).Generic.rVs(:,3) = [0.0063; 0.0445; -0.0170];
+Segment(4).Generic.rVs(:,3) = t_proximal2patella + ...
+    [0.0063; 0.0445; -0.0170];
 % Insertion of vastus intermedialis
-Segment(4).Generic.rVs(:,4) = [0.0058; 0.0480; -0.0006];
+Segment(4).Generic.rVs(:,4) = t_proximal2patella + ...
+    [0.0058; 0.0480; -0.0006];
 % Insertion of vastus lateralis
-Segment(4).Generic.rVs(:,5) = [0.0103; 0.0423; 0.0141];
+Segment(4).Generic.rVs(:,5) = t_proximal2patella + ...
+    [0.0103; 0.0423; 0.0141];
 
 % Origin / insertion in Segment 5
 % Virtual markers start at 7
@@ -611,88 +679,87 @@ Segment(5).Generic.rVs(:,43) = [-0.0155; -0.3946; 0.0272];
 
 % Origin / insertion in Segment 6
 % Virtual markers start at 2 (other is for hip joint)
-% Origin moved at distal endpoint
 %
 % Via point gluteus maximus I (considered as origin)
-Segment(6).Generic.rVs(:,2) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,2) = t_lumbar2pelvis + ...
     [-0.1291; 0.0012; 0.0886];
 % Via point gluteus maximus II (considered as origin)
-Segment(6).Generic.rVs(:,3) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,3) = t_lumbar2pelvis + ...
     [-0.1376; -0.0520; 0.0914]; 
 % Via point gluteus maximus III (considered as origin)
-Segment(6).Generic.rVs(:,4) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,4) = t_lumbar2pelvis + ...
     [-0.1529;-0.1052; 0.0403];
 % Origin of gluteus medius I
-Segment(6).Generic.rVs(:,5) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,5) = t_lumbar2pelvis + ...
     [-0.0408; 0.0304; 0.1209];
 % Origin of gluteus medius II
-Segment(6).Generic.rVs(:,6) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,6) = t_lumbar2pelvis + ...
     [-0.0855; 0.0445; 0.0766];
 % Origin of gluteus medius III
-Segment(6).Generic.rVs(:,7) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,7) = t_lumbar2pelvis + ...
     [-0.1223; 0.0105; 0.0648];
 % Origin of gluteus minimus I
-Segment(6).Generic.rVs(:,8) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,8) = t_lumbar2pelvis + ...
     [-0.0467;-0.0080; 0.1056];
 % Origin of gluteus minimus II
-Segment(6).Generic.rVs(:,9) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,9) = t_lumbar2pelvis + ...
     [-0.0633;-0.0065; 0.0991];
 % Origin of gluteus minimus III
-Segment(6).Generic.rVs(:,10) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,10) = t_lumbar2pelvis + ...
     [-0.0834;-0.0063; 0.0856];
 % Origin of adductor longus
-Segment(6).Generic.rVs(:,11) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,11) = t_lumbar2pelvis + ...
     [-0.0316;-0.0836; 0.0169];
 % Origin of adductor brevis
-Segment(6).Generic.rVs(:,12) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,12) = t_lumbar2pelvis + ...
     [-0.0587;-0.0915; 0.0164];
 % Origin of adductor magnus I
-Segment(6).Generic.rVs(:,13) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,13) = t_lumbar2pelvis + ...
     [-0.0732;-0.1174; 0.0255];
 % Origin of adductor magnus II
-Segment(6).Generic.rVs(:,14) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,14) = t_lumbar2pelvis + ...
     [-0.0831;-0.1192; 0.0308];
 % Origin of adductor magnus III
-Segment(6).Generic.rVs(:,15) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,15) = t_lumbar2pelvis + ...
     [-0.0771;-0.1181; 0.0276];
 % Origin of pectineus
-Segment(6).Generic.rVs(:,16) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,16) = t_lumbar2pelvis + ...
     [-0.0431;-0.0768; 0.0451];
 % Via point of illiacus (considered as origin)
-Segment(6).Generic.rVs(:,17) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,17) = t_lumbar2pelvis + ...
     [-0.0218;-0.0550; 0.0851];
 % Via point of psoas (considered as origin)
-Segment(6).Generic.rVs(:,18) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,18) = t_lumbar2pelvis + ...
     [-0.0238;-0.0570; 0.0759];
 % Origin of quadrutus femoris
-Segment(6).Generic.rVs(:,19) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,19) = t_lumbar2pelvis + ...
     [-0.1143;-0.1151; 0.0520];
 % Origin of gemellus
-Segment(6).Generic.rVs(:,20) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,20) = t_lumbar2pelvis + ...
     [-0.1133;-0.0820; 0.0714];
 % Via point piriformis
-Segment(6).Generic.rVs(:,21) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,21) = t_lumbar2pelvis + ...
     [-0.1193;-0.0276; 0.0657];
 % Origin of tensor fasciae latae
-Segment(6).Generic.rVs(:,22) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,22) = t_lumbar2pelvis + ...
     [-0.0311; 0.0214; 0.1241];
 % Origin of gracillis
-Segment(6).Generic.rVs(:,23) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,23) = t_lumbar2pelvis + ...
     [-0.0563;-0.1038; 0.0079];
 % Origin of semimembranosus
-Segment(6).Generic.rVs(:,24) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,24) = t_lumbar2pelvis + ...
     [-0.1192;-0.1015; 0.0695];
 % Origin of semitendinus
-Segment(6).Generic.rVs(:,25) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,25) = t_lumbar2pelvis + ...
     [-0.1237;-0.1043; 0.0603];
 % Origin of biceps femoris long head
-Segment(6).Generic.rVs(:,26) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,26) = t_lumbar2pelvis + ...
     [-0.1244;-0.1001; 0.0666];
 % Origin of sartorius
-Segment(6).Generic.rVs(:,27) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,27) = t_lumbar2pelvis + ...
     [-0.0153;-0.0013; 0.1242];
 % Origin of rectus femoris
-Segment(6).Generic.rVs(:,28) = t_midHJC2pelvis + ...
+Segment(6).Generic.rVs(:,28) = t_lumbar2pelvis + ...
     [-0.0295;-0.0311; 0.0968];
 
 
@@ -1254,9 +1321,9 @@ nPolys = fscanf(fid,'%f',1);
 fgetl(fid); % Go to next line
 fgetl(fid); % Bounding box of the bone
 for i = 1:nPoints
-    Segment(4).Generic.Vertices(i,1) = fscanf(fid,'%f',1); % Origin at distal endpoint
-    Segment(4).Generic.Vertices(i,2) = fscanf(fid,'%f',1);
-    Segment(4).Generic.Vertices(i,3) = fscanf(fid,'%f',1);
+    Segment(4).Generic.Vertices(i,1) = fscanf(fid,'%f',1) + t_proximal2patella(1,1); 
+    Segment(4).Generic.Vertices(i,2) = fscanf(fid,'%f',1) + t_proximal2patella(2,1);
+    Segment(4).Generic.Vertices(i,3) = fscanf(fid,'%f',1) + t_proximal2patella(3,1);
     fscanf(fid,'%f',1); 
     fscanf(fid,'%f',1);
     fscanf(fid,'%f',1); % Coordinates of the vertex normal
@@ -1312,9 +1379,9 @@ nPolys = fscanf(fid,'%f',1);
 fgetl(fid); % Go to next line
 fgetl(fid); % Bounding box of the bone
 for i = 1:nPoints
-    Segment(6).Generic.Vertices(i,1) = fscanf(fid,'%f',1) + t_midHJC2pelvis(1,1); % Origin at distal endpoint
-    Segment(6).Generic.Vertices(i,2) = fscanf(fid,'%f',1) + t_midHJC2pelvis(2,1);
-    Segment(6).Generic.Vertices(i,3) = fscanf(fid,'%f',1) + t_midHJC2pelvis(3,1);
+    Segment(6).Generic.Vertices(i,1) = fscanf(fid,'%f',1) + t_lumbar2pelvis(1,1);
+    Segment(6).Generic.Vertices(i,2) = fscanf(fid,'%f',1) + t_lumbar2pelvis(2,1);
+    Segment(6).Generic.Vertices(i,3) = fscanf(fid,'%f',1) + t_lumbar2pelvis(3,1);
     fscanf(fid,'%f',1); 
     fscanf(fid,'%f',1);
     fscanf(fid,'%f',1); % Coordinates of the vertex normal

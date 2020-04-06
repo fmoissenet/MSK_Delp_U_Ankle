@@ -48,58 +48,6 @@ hold on
 axis equal
 
 % -------------------------------------------------------------------------
-% Interpolation matrices
-% Insertion and origin of muscle lines of action
-% Plot of bone models
-% -------------------------------------------------------------------------
-
-for i = 2:6 % From i = 2 (Foot) to i = 6 (Pelvis)
-    
-    switch i
-        case 2
-            indj = 1:15; % 3 first virtual markers are for ankle joint
-            Segment(i).Informed.T = Q2Tuv_array3(Segment(i).Informed.Q);
-        case 3
-            indj = [1:3,6:28]; % 8 first virtual markers are for ankle, tibio-femoral and patello-femoral joints
-            % V43 and V53 are alreday available (should not be overwritten)
-            Segment(i).Informed.T = Q2Tuv_array3(Segment(i).Informed.Q);
-        case 4
-            indj = 1:5; % Firt virtual marker is for patello-femoral joint
-            Segment(i).Informed.T = Q2Tuv_array3(Segment(i).Informed.Q);
-            Segment(i).Informed.T(1:3,4,:) = Segment(i).Informed.Q(7:9,:,:);
-        case 5
-            indj = 3:43; % 6 first virtual markers are for tibio-femoral joint
-            % V43 and V53 are alreday available (should not be overwritten)
-            Segment(i).Informed.T = Q2Tuv_array3(Segment(i).Informed.Q);
-        case 6
-            indj = 1:28; % Firt virtual marker is  for hip joint
-            Segment(i).Informed.T = Q2Tuv_array3(Segment(i).Informed.Q);
-            Segment(i).Informed.T(1:3,4,:) = Segment(i).Informed.Q(7:9,:,:);
-    end
-    for j = indj
-        % Interpolation matrix
-        eval(['NV',num2str(j),num2str(i),...
-            '= [Segment(',num2str(i),').Informed.nV(1,',num2str(j),')*eye(3),',...
-            '(1 + Segment(',num2str(i),').Informed.nV(2,',num2str(j),'))*eye(3),',...
-            '- Segment(',num2str(i),').Informed.nV(2,',num2str(j),')*eye(3),',...
-            'Segment(',num2str(i),').Informed.nV(3,',num2str(j),')*eye(3)];']);
-        % Point of muscle line of action crossing the joints
-        eval(['Segment(',num2str(i),').Informed.rV',num2str(j),num2str(i),...
-            '(1:3,1,:) = Mprod_array3(repmat(NV',num2str(j),num2str(i),...
-            ',[1,1,n]),Segment(',num2str(i),').Informed.Q);']);
-    end
-    
-    % Scaled vertices in ICS
-    Vertices_k = (Segment(i).Informed.T(:,:,k)*...
-        [Segment(i).Generic.Vertices*Segment(i).Informed.Scale, ...
-        ones(length(Segment(i).Generic.Vertices),1)]')';
-    % Plot
-    patch('Faces',Segment(i).Generic.Faces,'Vertices',Vertices_k(:,1:3),...
-        'FaceColor','k','FaceAlpha', 0.15,'EdgeColor','none');
-    
-end
-
-% -------------------------------------------------------------------------
 % Segments
 % -------------------------------------------------------------------------
 
@@ -123,6 +71,54 @@ plot3([Segment(5).Informed.Q(4,1,k),Segment(5).Informed.Q(7,1,k)],...
 plot3([Segment(6).Informed.Q(4,1,k),Segment(6).Informed.Q(7,1,k)],...
     [Segment(6).Informed.Q(5,1,k),Segment(6).Informed.Q(8,1,k)],...
     [Segment(6).Informed.Q(6,1,k),Segment(6).Informed.Q(9,1,k)],'k','linewidth',3);
+
+% -------------------------------------------------------------------------
+% Interpolation matrices
+% Insertion and origin of muscle lines of action
+% Plot of bone models
+% -------------------------------------------------------------------------
+
+for i = 2:6 % From i = 2 (Foot) to i = 6 (Pelvis)
+    
+    switch i
+        case 2
+            indj = 1:15; % 3 first virtual markers are for ankle joint
+        case 3
+            indj = [1:3,6:28]; % 8 first virtual markers are for ankle, tibio-femoral and patello-femoral joints
+            % V43 and V53 are alreday available (should not be overwritten)
+        case 4
+            indj = 1:5; % Firt virtual marker is for patello-femoral joint
+        case 5
+            indj = 3:43; % 6 first virtual markers are for tibio-femoral joint
+            % V15 and V25 are alreday available (should not be overwritten)
+        case 6
+            indj = 1:28; % Firt virtual marker is  for hip joint
+    end
+    for j = indj
+        % Interpolation matrix
+        eval(['NV',num2str(j),num2str(i),...
+            '= [Segment(',num2str(i),').Informed.nV(1,',num2str(j),')*eye(3),',...
+            '(1 + Segment(',num2str(i),').Informed.nV(2,',num2str(j),'))*eye(3),',...
+            '- Segment(',num2str(i),').Informed.nV(2,',num2str(j),')*eye(3),',...
+            'Segment(',num2str(i),').Informed.nV(3,',num2str(j),')*eye(3)];']);
+        % Point of muscle line of action crossing the joints
+        eval(['Segment(',num2str(i),').Informed.rV',num2str(j),num2str(i),...
+            '(1:3,1,:) = Mprod_array3(repmat(NV',num2str(j),num2str(i),...
+            ',[1,1,n]),Segment(',num2str(i),').Informed.Q);']);
+    end
+    
+    % Transformation from ICS to SCS
+    Segment(i).Informed.T = Q2Tuv_array3(Segment(i).Informed.Q);
+
+    % Scaled vertices in ICS
+    Vertices_k = (Segment(i).Informed.T(:,:,k)*...
+        [Segment(i).Generic.Vertices*Segment(i).Informed.Scale, ...
+        ones(length(Segment(i).Generic.Vertices),1)]')';
+    % Plot
+    patch('Faces',Segment(i).Generic.Faces,'Vertices',Vertices_k(:,1:3),...
+        'FaceColor','k','FaceAlpha', 0.15,'EdgeColor','none');
+    
+end
 
 % -------------------------------------------------------------------------
 % Muscle lines of action
@@ -339,14 +335,18 @@ plot3([Segment(3).Informed.rV93(1,1,k),Segment(4).Informed.Q(7,1,k)],...
 quiver3(Segment(4).Informed.rV14(1,1,k),Segment(4).Informed.rV14(2,1,k),Segment(4).Informed.rV14(3,1,k), ...
     Segment(4).Informed.n14(1,1,k)*0.1,Segment(4).Informed.n14(2,1,k)*0.1,Segment(4).Informed.n14(3,1,k)*0.1,0,'b');
 
-
-% Midpoint between between ankle axis and subtalar axis (universal joint for ankle)
+% Point on ankle axis and subtalar axis
 plot3(Segment(2).Informed.rV12(1,1,k),Segment(2).Informed.rV12(2,1,k),Segment(2).Informed.rV12(3,1,k),'ob');
 plot3(Segment(3).Informed.rV13(1,1,k),Segment(3).Informed.rV13(2,1,k),Segment(3).Informed.rV13(3,1,k),'ob');
 quiver3(Segment(2).Informed.rV12(1,1,k),Segment(2).Informed.rV12(2,1,k),Segment(2).Informed.rV12(3,1,k), ...
     Segment(2).Informed.n12(1,1,k)*0.1,Segment(2).Informed.n12(2,1,k)*0.1,Segment(2).Informed.n12(3,1,k)*0.1,0,'b');
 quiver3(Segment(3).Informed.rV13(1,1,k),Segment(3).Informed.rV13(2,1,k),Segment(3).Informed.rV13(3,1,k), ...
     Segment(3).Informed.n13(1,1,k)*0.1,Segment(3).Informed.n13(2,1,k)*0.1,Segment(3).Informed.n13(3,1,k)*0.1,0,'b');
+
+
+% -------------------------------------------------------------------------
+% Markers
+% -------------------------------------------------------------------------
 
 % Real markers
 for i = [2,3,5,6]

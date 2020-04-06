@@ -153,38 +153,6 @@ Model.Informed.K2(21,:,:) = Model.Informed.K(39,1:48,:);
 Model.Informed.K2(22,:,:) = Model.Informed.K(41,1:48,:);
 Model.Informed.K2(23,:,:) = Model.Informed.K(42,1:48,:);
 
-% % -------------------------------------------------------------------------
-% % Weight matrix
-% % -------------------------------------------------------------------------
-%
-% % Initialisation
-% Model.Informed.W = eye(43 + 19); % Number of muscles + number of Lagrange multipliers
-%
-% % Condition 1
-% Model.Informed.W(43+1:43+19,43+1:43+19) = zeros(19,19);
-%
-% % % Condition 2 (Moissenet et al. 2014)
-% % Model.Informed.W(43+1,43+1) = 1e0; % Ankle contact about X axis
-% % Model.Informed.W(43+2,43+2) = 1e0; % Ankle contact about Y axis
-% % Model.Informed.W(43+3,43+3) = 1e0; % Ankle contact about Z axis
-% % Model.Informed.W(43+4,43+4) = 1e-6; % Knee medial contact about X axis
-% % Model.Informed.W(43+5,43+5) = 2; % Knee medial contact about Y axis
-% % Model.Informed.W(43+6,43+6) = 1e-6; % Knee medial contact about Z axis
-% % Model.Informed.W(43+7,43+7) = 1e-6; % Knee lateral contact about X axis
-% % Model.Informed.W(43+8,43+8) = 2; % Knee lateral contact about Y axis (it was 4 in Moissenent et al. 2014)
-% % Model.Informed.W(43+9,43+9) = 1e-6; % Patellar contact about X axis
-% % Model.Informed.W(43+10,43+10) = 1e-6; % Patellar contact about Y axis
-% % Model.Informed.W(43+11,43+11) = 1e-6; % % Patellar contact about Z axis
-% % Model.Informed.W(43+12,43+12) = 1e-6; % PT
-% % Model.Informed.W(43+13,43+13) = 1e0; % Hip contact about X axis
-% % Model.Informed.W(43+14,43+14) = 1e0; % Hip contact about Y axis
-% % Model.Informed.W(43+15,43+15) = 1e0; % Hip contact about Z axis
-% % Model.Informed.W(43+16,43+16) = 0; % Foot axial
-% % Model.Informed.W(43+17,43+17) = 1e-6; % Tibia axial
-% % Model.Informed.W(43+18,43+18) = 0; % Patella axial
-% % Model.Informed.W(43+19,43+19) = 1e-6; % Femur axial
-
-
 % -------------------------------------------------------------------------
 % HILL MODEL
 % -------------------------------------------------------------------------
@@ -201,6 +169,7 @@ for j = 1:43
         Model.Informed.Lts(j)),repmat(cos(Model.Informed.pennation(j))^(-1),[1,1,n]));
     
     % Operaring range : 0.44*L0 (Fla = 0) to 1.2*L0 (Fpl too high)
+    % Compliant tendon shall prevent too short/long muscle length
     Lmmin = 0.44*Model.Informed.L0(j);
     Lmmax = 1.2*Model.Informed.L0(j);
     Lmjmin = min(Model.Informed.Lm(j,1,1:n));
@@ -221,6 +190,7 @@ for j = 1:43
             repmat((0.44*Model.Informed.L0(j) - ...
             min(Model.Informed.Lm(j,1,:)))*1.05,... 5% more
             [1,1,n]);
+        display(['Adjusted length for muscle ',num2str(j)])
     end
     
     % Normalised muscle velocity
@@ -242,13 +212,13 @@ for j = 1:43
         (Model.Informed.Lm(j,1,:)./repmat(Model.Informed.L0(j),[1,1,n]) ... % Normalised
         - ones(1,1,n))).*repmat(1/exp(5),[1,1,n]);
     
-    % Less stiff musculo-tendon unit in older adults
-    Flp(j,1,1:n) = Flp(j,1,1:n)*0.70; % Less stiff musculo-tendon unit in older adults
+%     % Less stiff musculo-tendon unit in older adults
+%     Flp(j,1,1:n) = Flp(j,1,1:n)*0.70; % Less stiff musculo-tendon unit in older adults
     
     % From musculo-tendon force to activation
     % Fm = Fmax*cos(pennation) * (Fa(l)*F(v) * a + Fp(l))
     %  a = Fm/[Fa(l)*F(v)*Fmax*cos(pennation)] - Fp(l)/[Fa(l)*F(v)]
-    % a = A*Fm + B
+    % a = A*Fm + b
     A(j,j,1:n) = (repmat(61*Model.Informed.PCSA(j,1)*...
         cos(Model.Informed.pennation(j,1)),[1,1,n]).*...
         Fla(j,1,1:n).*Fv(j,1,1:n)).^-1;
@@ -265,6 +235,9 @@ for j = 1:43
         (Fla(j,1,1:n).*Fv(j,1,1:n).*ones(1,1,n) + Flp(j,1,1:n));
     
 end
+
+Model.Informed.A = A; % To further transform f into a
+Model.Informed.B = B; % To further transform f into a
 
 % -------------------------------------------------------------------------
 % RUN OPTIMISATION FOR EACH FRAME
@@ -334,13 +307,13 @@ for i = 1:n
         'GradObj','on','algorithm','sqp');
     
     % Optimisation
-    Aw(1:43,1:43) = A(:,:,i); % .*diag(Model.Informed.PCSA.*Model.Informed.L0); % Muscle volume
+    Aw(1:43,1:43) = A(:,:,i); % From musculo-tendon force to activation
     Aw(43+1:43+19,43+1:43+19) = diag(zeros(19,1));
-        Aw(43+2,43+2) = 1/3000*43/4; % Ankle contact about Y axis
-        Aw(43+5,43+5) = 1/1500*43/4; % Knee medial contact about Y axis
-        Aw(43+8,43+8) = 1/1500*43/4; % Knee lateral contact about Y axis
-        Aw(43+14,43+14) = 1/3000*43/4; % Hip contact about Y axis
-    Bw = [B(:,:,i); ... % .*(Model.Informed.PCSA.*Model.Informed.L0); % Muscle volume 
+%         Aw(43+2,43+2) = 1/3000*43/4; % Ankle contact about Y axis
+%         Aw(43+5,43+5) = 1/1500*43/4; % Knee medial contact about Y axis
+%         Aw(43+8,43+8) = 1/1500*43/4; % Knee lateral contact about Y axis
+%         Aw(43+14,43+14) = 1/3000*43/4; % Hip contact about Y axis
+    Bw = [B(:,:,i); ... % From musculo-tendon force to activation
         zeros(19,1)];
     C = @(X)Criterion_Lagrange_Multipliers(X,Aw,Bw); % Anonymous function (to pass extra parameters)
     [X,~,exitflag] = fmincon(C,Xini,[],[],Aeq,Beq,Xmin,Xmax,[],options);

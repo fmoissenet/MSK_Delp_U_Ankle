@@ -225,17 +225,14 @@ NV25 = [nV25(1,1,:), zeros(1,2,n), ones(1,1,n) + nV25(2,1,:), zeros(1,2,n), -nV2
 % Coordinates of virtual markers in Segment 3
 % Expressed in (u3, rP3-rD3, w3)
 % Patellar tendon insertion
-% Scaled by a homothety of centre at distal endpoint
+% Scaled by a homothety of centre at proximal endpoint
 Segment(3).Informed.nV(:,9) = inv(Segment(3).Informed.B) *...
     Segment(3).Generic.rVs(:,9)*Segment(3).Informed.Scale; % V93: virtual marker 9 of segment 3
 
 % Coordinates of virtual markers in Segment 4
 % Expressed in (u4, rP4-rD4, w4)
 % Position of hinge axis
-% Scaled by a homothety of centre at distal endpoint
-% Coordinates are also defined with respect to distal endpoint
-Segment(4).Informed.nV(:,1) = [0;-1;0] + ...
-    inv(Segment(4).Informed.B)* ...
+Segment(4).Informed.nV(:,1) = inv(Segment(4).Informed.B)* ...
     Segment(4).Generic.rVs(:,1)*Segment(4).Informed.Scale; % V14: virtual marker 1 of segment 4
 % Orientation of hinge axis
 Segment(4).Informed.nn(:,1) = inv(Segment(4).Informed.B) * ...
@@ -282,11 +279,10 @@ NV65 = [Segment(5).Informed.nV(1,6)*eye(3),...
 
 % Coordinates of virtual markers in Segment 6
 % Expressed in  in (u6, rP6-rD6, w6)
-% scaled by a homothety of centre at V16 (hip joint centre)
-% Coordinates are also defined with respect to distal endpoint
-Segment(6).Informed.nV(:,1) = [0;-1;0] + ...
-    inv(Segment(6).Informed.B) * ...
-    Segment(6).Generic.rVs(:,1)*Segment(6).Informed.Scale;
+% Scaled by a homothety of centre at proximal endpoint
+Segment(6).Informed.nV(:,1) =  inv(Segment(6).Informed.B) * ...
+    Segment(6).Generic.rVs(:,1)*...
+    Segment(6).Informed.Scale;
 
 % Interpolation matrix for Segment 6
 NV16 = [Segment(6).Informed.nV(1,1)*eye(3),...
@@ -411,7 +407,8 @@ while max(permute(sqrt(sum(F.^2)),[3,2,1])) > 10e-12 && step < 20
     % Patellar tendon length
     Joint(4).Informed.d(1,1) = norm([0; Segment(5).Informed.L; 0] ... % From rD to rP in Thigh
         + Segment(5).Generic.rVs(:,6)*Segment(5).Informed.Scale ... % From rP to position of hinge axis in Thigh
-        - Segment(4).Generic.rVs(:,1)*Segment(4).Informed.Scale ...  % From position of hinge axis to rD in Patella
+        - Segment(4).Generic.rVs(:,1)*Segment(4).Informed.Scale ...  % From position of hinge axis to rP in Patella
+        - [0; Segment(4).Generic.L; 0]*Segment(4).Informed.Scale ... % From rP to rD in Patella
         - Segment(3).Generic.rVs(:,9)*Segment(3).Informed.Scale); % From patellar tendon insertion to rP in Shank (= rD in Thigh)
 
     % Vector of kinematic constraints

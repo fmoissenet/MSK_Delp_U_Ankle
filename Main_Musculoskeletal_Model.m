@@ -68,7 +68,7 @@
 
 % Clear/clean workspace, command window and figures
 clc
-% close all
+close all
 clear all
 
 % Select data file
@@ -106,15 +106,14 @@ Segment(6).Informed = rmfield(Segment(6).Informed,'Informed');
 % i = 1 (Ground)
 Joint(1).Informed = Joint(1); % Add all fields at a second level
 
-% ?????????????????????????????????????????????????????????????????????????
 % Original fields are not kept
-Segment = rmfield(Segment,'Q'); % For test only
-Segment = rmfield(Segment,'rM'); % For test only
-Segment = rmfield(Segment,'m'); % For test only
-Segment = rmfield(Segment,'rCs'); % For test only
-Segment = rmfield(Segment,'Is'); % For test only
-Joint = rmfield(Joint,'F'); % For test only
-Joint = rmfield(Joint,'M'); % For test only
+Segment = rmfield(Segment,'Q');
+Segment = rmfield(Segment,'rM');
+Segment = rmfield(Segment,'m');
+Segment = rmfield(Segment,'rCs');
+Segment = rmfield(Segment,'Is');
+Joint = rmfield(Joint,'F');
+Joint = rmfield(Joint,'M');
 
 
 %% -------------------------------------------------------------------------
@@ -124,13 +123,32 @@ Joint = rmfield(Joint,'M'); % For test only
 % Defined according to Delp's model
 Main_Set_Geometry_Delp
 
-% Change w axis into Z axis for thigh segment
-Segment(5).Informed.T = Q2Tuv_array3(Segment(5).Informed.Q);
-Segment(5).Informed.Q(10:12,:,:) = Segment(5).Informed.T(1:3,3,:);
-% To ensure 0 amplitude on other DoFs than flexion at the knee
+% Optional
+% Change lumbar and hip joint centres to better match Delp's one
+% Based on real markers rM16 = LASIS and rM26 = ASIS
+Segment(6).Informed.W = mean(sqrt(sum((Segment(6).Informed.rM(:,1,:) - Segment(6).Informed.rM(:,2,:)).^2)),3);
+Segment(6).Informed.Scale = Segment(6).Informed.W/...
+    Segment(6).Generic.W; % Default scale
+Segment(6).Informed.T = Q2Tuv_array3(Segment(6).Informed.Q);
+Segment(6).Informed.Q(4:6,:,:) = ...
+    (Segment(6).Informed.rM(:,1,:) + Segment(6).Informed.rM(:,2,:))/2 - ... % Mid-ASIS
+    0.01*Segment(6).Informed.T(1:3,1,:) + ... Flesh margin on X-axis (1 cm)
+    Mprod_array3(Segment(6).Informed.T(1:3,1:3,:), ... 
+    repmat([-t_lumbar2pelvis]*Segment(6).Informed.Scale,[1,1,n])); % Redefined P6
+Segment(6).Informed.Q(7:9,:,:) = Segment(6).Informed.Q(4:6,:,:) + ... 
+    Mprod_array3(Segment(6).Informed.T(1:3,1:3,:), ... 
+    repmat([Segment(6).Generic.rVs(1:2,1);0]*Segment(6).Informed.Scale,[1,1,n])); % Redefined D6
+Segment(5).Informed.Q(4:6,:,:) = Segment(6).Informed.Q(7:9,:,:) + ...
+    Mprod_array3(Segment(6).Informed.T(1:3,1:3,:), ... 
+    repmat([0;0;Segment(6).Generic.rVs(3,1)]*Segment(6).Informed.Scale,[1,1,n])); % Redefined P5
+Segment(5).Informed.Q(1:3,:,:) = Vnorm_array3(cross(Segment(5).Informed.Q(4:6,:,:) ...
+    - Segment(5).Informed.Q(7:9,:,:), ...
+    Segment(5).Informed.Q(10:12,:,:)));  % Rededined u5 axis
+Segment(5).Informed.Q(10:12,:,:) = Vnorm_array3(cross(Segment(5).Informed.Q(1:3,:,:), ...
+    Segment(5).Informed.Q(4:6,:,:) - Segment(5).Informed.Q(7:9,:,:))); % Rededined w5 axis
 
 % Define segment scales
-Segment = Define_Scale(Segment,Model);
+[Segment,Model] = Define_Scale(Segment,Model);
 
 
 %% -------------------------------------------------------------------------
@@ -198,6 +216,9 @@ Model = Static_Optimisation_Lagrange_Multipliers_Hill(Segment,Joint,Model);
 
 % Musculo-tendon forces (tensile forces > 0)
 Model.Informed.Fm = Model.Informed.X(1:43,1,1:n); % About lines of action
+% Muscle activation (0 < a < 1)
+Model.Informed.a = Mprod_array3(Model.Informed.A,Model.Informed.Fm) + ...
+    Model.Informed.B;
 
 % Contact forces (reaction forces > 0 i.e., acting on the proximal segment)
 Model.Informed.Fc = [Model.Informed.X(43+1:43+3,1,1:n); ... % 3D ankle contact in foot SCS
@@ -221,6 +242,26 @@ Model.Informed.Fb = Model.Informed.X(43+16:43+19,1,1:n); % Foot, tibia, patella,
 % Musculo-tendon forces
 figure
 plot(squeeze(1/(Model.Informed.Mass*9.81)*Model.Informed.Fm(:,:,:))');
+legend({'Gluteus maximus I', 'Gluteus maximus II', 'Gluteus maximus III', ...
+    'Gluteus medius I', 'Gluteus medius II', 'Gluteus medius III', ...
+    'Gluteus minimus I', 'Gluteus minimus II', 'Gluteus minimus III', ...
+    'Adductor longus', 'Adductor brevis', ...
+    'Adductor magnus I', 'Adductor magnus II', 'Adductor magnus III', ...
+    'Pectineus', 'Illiacus', 'Psoas', ...
+    'Quadratus femoris', 'Gemelli', ...
+    'Piriformis','Tensor fasciae latae', ...
+    'Gracilis', 'Sartorius', 'Semimembranosus', ...
+    'Semitendinus', 'Biceps femoris long head', ...
+    'Biceps femoris short head', 'Rectus femoris', ...
+    'Vastus medialis', 'Vastus intermedialis', 'Vastus lateralis', ...
+    'Gastrocnemius medialis', 'Gastrocnemius lateralis', ...
+    'Soleus', 'Tibialis posterior', 'Tibialis anterior', ...
+    'Peroneus brevis', 'Peroneus longus', 'Peroneus tertius', ...
+    'Extensor digitorum longus', 'Extensor hallucis longus', ...
+    'Flexor digitorum longus', 'Flexor hallucis longus'})
+
+figure
+plot(squeeze(Model.Informed.a(:,:,:))');
 legend({'Gluteus maximus I', 'Gluteus maximus II', 'Gluteus maximus III', ...
     'Gluteus medius I', 'Gluteus medius II', 'Gluteus medius III', ...
     'Gluteus minimus I', 'Gluteus minimus II', 'Gluteus minimus III', ...

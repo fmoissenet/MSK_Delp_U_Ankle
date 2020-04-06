@@ -91,12 +91,11 @@ end
 
 % Segment 4
 i = 4;
-% Muscles scaled by a homothety of centre at distal endpoint
-% Coordinates are also defined with respect to distal endpoint
+% Muscles scaled by a homothety of centre at proximal endpoint
 for j = 2:5
     % Coordinates of virtual markers in Segment i
     % Expressed in (ui, rPi-rDi, wi)
-    Segment(i).Informed.nV(:,j) = [0; -1; 0] + inv(Segment(i).Informed.B) * ...
+    Segment(i).Informed.nV(:,j) = inv(Segment(i).Informed.B) * ...
         Segment(i).Generic.rVs(:,j)*Segment(i).Informed.Scale;
 end
 
@@ -133,11 +132,7 @@ end
 
 % Segment 6
 i = 6;
-% Muscles scaled by a homothety of centre at V16 (hip joint centre)
-% Coordinates are also defined with respect to distal endpoint
-j = 1;
-Segment(i).Informed.nV(:,j) = [0; -1; 0] + inv(Segment(i).Informed.B) * ...
-    Segment(i).Generic.rVs(:,j)*Segment(i).Informed.Scale; % V16
+% Muscles scaled by a homothety of centre at hip joint centre
 for j = 2:28
     % Coordinates of virtual markers in Segment i
     % Expressed in (ui, rPi-rDi, wi)
@@ -161,7 +156,6 @@ for i = 2:6 % From i = 2 (Foot) to i = 6 (Pelvis)
             indj = 10:28; % Virtual markers start at 10 (others are for ankle, tibio-femoral and patello-femoral joints)
         case 4
             indj = 2:5; % Virtual markers start at 2 (other is for patello-femoral joint)
-            % Muscles scaled by a homothety of centre at proximal endpoint
         case 5
             indj = 7:43; % Virtual markers start at 7 (others are for tibio-femoral joint)
         case 6
@@ -180,12 +174,10 @@ for i = 2:6 % From i = 2 (Foot) to i = 6 (Pelvis)
 end
 
 % Muscle parameters
-Model.Informed.L0(1:31,1) = Model.Generic.L0(1:31,1)*Segment(5).Informed.Scale;
-Model.Informed.L0(32:43,1) = Model.Generic.L0(32:43,1)*Segment(3).Informed.Scale;
-Model.Informed.Lts(1:31,1) = Model.Generic.Lts(1:31,1)*Segment(5).Informed.Scale;
-Model.Informed.Lts(32:43,1) = Model.Generic.Lts(32:43,1)*Segment(3).Informed.Scale;
+Model.Informed.L0(:,1) = Model.Generic.L0(:,1)*Model.Informed.Scale;
+Model.Informed.Lts(:,1) = Model.Generic.Lts(:,1)*Model.Informed.Scale;
 for j = 1:43
-    Model.Informed.V0max(j,1) = 10 * Model.Informed.L0(j,1);
+    Model.Informed.V0max(j,1) = 10*Model.Informed.L0(j,1);
 end
 Model.Informed.Fmax = Model.Generic.Fmax; % No scaling
 Model.Informed.PCSA = Model.Generic.PCSA; % No scaling

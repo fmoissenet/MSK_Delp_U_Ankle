@@ -38,12 +38,6 @@
 % September 2012
 %
 % Modified by Raphael Dumas
-% June 2019
-% Correction (definition of Segment(4).Q)
-% rP4 = Mprod_array3(repmat(NV65,[1,1,n]),Segment(5).Q) - rVs14(1,1)*u4
-% (not + rVs14(1,1)*u4)
-%
-% Modified by Raphael Dumas
 % March 2020
 % Generic vs. Informed structures (Segment, Joint, Model)
 % n,f,fc as Model.Informed fields
@@ -74,15 +68,13 @@ NVZ5 =[nZ5(1,1)*eye(3),...
     nZ5(3,1)*eye(3)];
 
 % Hinge in patella
-rVs14 = Segment(4).Generic.rVs(:,1)*Segment(4).Informed.Scale; % Not added as field in Segment
-% Origin at distal endpoint
+rVs14 = Segment(4).Generic.rVs(:,1)*Segment(4).Informed.Scale;
 
 % Patella length
 Segment(4).Informed.L = Segment(4).Generic.L*Segment(4).Informed.Scale;
 
 % Hinge in femur
-rVs65 = Segment(5).Generic.rVs(:,6)*Segment(5).Informed.Scale; % Not added as field in Segment
-% Origin at rD5
+rVs65 = Segment(5).Generic.rVs(:,6)*Segment(5).Informed.Scale;
 
 % Point of the hinge axis in femur
 Segment(5).Informed.nV(:,6) =  invB5*rVs65; % Virtual marker 6
@@ -94,7 +86,7 @@ NV65 = [Segment(5).Informed.nV(1,6)*eye(3),...
 
 
 %% -------------------------------------------------------------------------
-% Definition of Segment 4
+% Definition of segment parameters Q and corresponding geometry
 % -------------------------------------------------------------------------
 
 u4 = Vnorm_array3((Segment(3).Informed.Q(1:3,1,:) + ...
@@ -102,29 +94,16 @@ u4 = Vnorm_array3((Segment(3).Informed.Q(1:3,1,:) + ...
 v4 = Vnorm_array3(cross(Mprod_array3(repmat(NVZ5,[1,1,n]), ...
     Segment(5).Informed.Q),u4)); % Z axis of femur SCS in the NSCS
 w4 = Vnorm_array3(cross(u4,v4));
-rD4 = Mprod_array3(repmat(NV65,[1,1,n]),Segment(5).Informed.Q)...
+rP4 = Mprod_array3(repmat(NV65,[1,1,n]),Segment(5).Informed.Q)...
     - rVs14(1,1)*u4 ...
     - rVs14(2,1)*v4; % Distance from the point of the hinge axis to the origin of patella SCS
-rP4 = rD4 + Segment(4).Informed.L*v4;
+rD4 = rP4 - Segment(4).Informed.L*v4;
 Segment(4).Informed.Q = [u4;rP4;rD4;w4];
 
-% Alpha angle between (rP - rD) and w
-Segment(4).Informed.alpha = mean(acosd(dot(Segment(4).Informed.Q(4:6,1,:) - ...
-    Segment(4).Informed.Q(7:9,1,:), Segment(4).Informed.Q(10:12,1,:))./...
-    sqrt(sum((Segment(4).Informed.Q(4:6,1,:) - ...
-    Segment(4).Informed.Q(7:9,1,:)).^2))),3);
-
-% Beta angle between u and w
-Segment(4).Informed.beta = mean(acosd(dot(Segment(4).Informed.Q(10:12,1,:), ...
-    Segment(4).Informed.Q(1:3,1,:))),3);
-
-% Gamma angle between u and (rP - rD)
-Segment(4).Informed.gamma = mean(acosd(dot(Segment(4).Informed.Q(1:3,1,:), ...
-    Segment(4).Informed.Q(4:6,1,:) - Segment(4).Informed.Q(7:9,1,:))./...
-    sqrt(sum((Segment(4).Informed.Q(4:6,1,:) - ...
-    Segment(4).Informed.Q(7:9,1,:)).^2))),3);
-
-% Matrix B from SCS to NSCS
+% Corresponding geometry
+Segment(4).Informed.alpha = Segment(4).Generic.alpha;
+Segment(4).Informed.beta = Segment(4).Generic.beta;
+Segment(4).Informed.gamma = Segment(4).Generic.gamma;
 Segment(4).Informed.B = [1, ...
     Segment(4).Informed.L*cosd(Segment(4).Informed.gamma), ...
     cosd(Segment(4).Informed.beta); ...
@@ -139,5 +118,6 @@ Segment(4).Informed.B = [1, ...
     ((cosd(Segment(4).Informed.alpha) - ...
     cosd(Segment(4).Informed.beta)*cosd(Segment(4).Informed.gamma))/ ...
     sind(Segment(4).Informed.gamma))^2)];
+Segment(4).Informed.T = Q2Tuv_array3(Segment(4).Informed.Q);
 
 
